@@ -14,14 +14,27 @@ $opts = [
     'mkdir mkfile rename duplicate upload rm paste' => [$myLogger, 'log'],
   ],
   'roots' => [
+    // [
+    //   'driver'        => 'FTP',
+    //   'host'          => Config::get('static.host'),
+    //   'user'          => Config::get('static.user'),
+    //   'pass'          => Config::get('static.password'),
+    //   'path'          => Config::get('static.path') . 'img/visual/',
+    //   'timeout'       => Config::get('static.timeout'),
+    //   'URL'           => Config::get('static.url') . 'img/visual/',
+    //   'alias'         => 'Dicționarul vizual',
+    //   'uploadAllow'   => ['image'], // mimetypes allowed to upload
+    //   'disabled'      => ['resize', 'mkfile', 'duplicate'], // list of not allowed commands
+    //   'imgLib'        => 'gd',
+
+    //   // Thumbnails are still stored locally
+    //   'tmbPath'       => '../img/generated',
+    //   'tmbURL'        => '../img/generated',
+    // ],
     [
-      'driver'        => 'FTP',
-      'host'          => Config::get('static.host'),
-      'user'          => Config::get('static.user'),
-      'pass'          => Config::get('static.password'),
-      'path'          => Config::get('static.path') . 'img/visual/',
-      'timeout'       => Config::get('static.timeout'),
-      'URL'           => Config::get('static.url') . 'img/visual/',
+      'driver' => 'LocalFileSystem',
+      'path' => '/srv/http/DEX/static/visual/',
+      'URL' => 'http://static.dex.localhost/visual/',
       'alias'         => 'Dicționarul vizual',
       'uploadAllow'   => ['image'], // mimetypes allowed to upload
       'disabled'      => ['resize', 'mkfile', 'duplicate'], // list of not allowed commands
