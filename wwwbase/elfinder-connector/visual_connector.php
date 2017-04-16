@@ -33,8 +33,8 @@ $opts = [
     // ],
     [
       'driver' => 'LocalFileSystem',
-      'path' => '/srv/http/DEX/static/visual/',
-      'URL' => 'http://static.dex.localhost/visual/',
+      'path' => '/srv/http/DEX/static/img/visual/',
+      'URL' => 'http://static.dex.localhost/img/visual/',
       'alias'         => 'Dicționarul vizual',
       'uploadAllow'   => ['image'], // mimetypes allowed to upload
       'disabled'      => ['resize', 'mkfile', 'duplicate'], // list of not allowed commands
