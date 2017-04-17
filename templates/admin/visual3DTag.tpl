@@ -10,7 +10,8 @@
 <script src="{$wwwRoot}js/third-party/three/three.js/examples/js/Detector.js"></script>
 <script src="{$wwwRoot}js/third-party/three/three.js/examples/js/libs/stats.min.js"></script>
 
-<div id="3deditor"></div>
+<div id="3deditor" style="display: inline-block"></div>
+<div id="debug" style="display: inline-block; border: 1px solid black; min-width: 300px; height: 600px"></div>
 
 <script src="{$wwwRoot}js/visual3DTag.js"></script>
 

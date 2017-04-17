@@ -1,6 +1,6 @@
 (function(){
 
-  var RESOLUTION = [1024, 768];
+  var RESOLUTION = [800, 600];
 
   if (!Detector.webgl) { Detector.addGetWebGLMessage(); };
 
@@ -35,25 +35,30 @@
       console.log(xhr);
     };
 
-    var loader = new THREE.JSONLoader(manager);
+    var loader = new THREE.ObjectLoader(manager);
     loader.load(
       'http://dex.localhost/static/3dvisual/untitled.json',
-      function(geometry, materials) {
-        var mesh = new THREE.Mesh(geometry, materials);
-        scene.add(mesh);
-        controls.target.copy(mesh.position);
+      function(object) {
 
-        var wireframe = new THREE.WireframeGeometry(geometry);
-        var wireframe_mat = new THREE.LineBasicMaterial({
-          color: 0xffffff,
-          linewidth: 1,
+        function wireframe_from_geo(geometry) {
+          var wireframe_geo = new THREE.WireframeGeometry(geometry);
+          var wireframe_mat = new THREE.LineBasicMaterial({
+            color: 0xffffff,
+            linewidth: 1,
+          });
+          var wireframe = new THREE.LineSegments(wireframe_geo, wireframe_mat);
+          wireframe.material.depthTest = false;
+          wireframe.material.opacity = 0.25;
+          wireframe.material.transparent = false;
+          return wireframe;
+        }
+
+        object.children.forEach(function(child){
+          child.add(wireframe_from_geo(child.geometry))
         });
-        var line = new THREE.LineSegments(wireframe, wireframe_mat);
-        line.material.depthTest = false;
-        line.material.opacity = 0.25;
-        line.material.transparent = false;
-        scene.add(line);
 
+        scene.add(object);
+        controls.target.copy(object.position);
       },
       onProgress, onError
     );
@@ -67,7 +72,7 @@
 
     // Controls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    // controls.target.set(0, 12, 0);
+    controls.enablePan = false;
     camera.position.set(0, 0, 10);
     controls.update();
 
