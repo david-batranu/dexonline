@@ -17,14 +17,15 @@
   </p>
 
   <div class="row">
-    <div class="col-md-6">
 
       <div class="panel panel-default">
         <div class="panel-heading">
           Preview
         </div>
         <div class="panel-body">
-          <div id="3dpreview" data-src="{$cfg.static.url}img/visual/{$visual->path}"></div>
+          <div
+            id="3dpreview" style="text-align: center"
+            data-src="{$cfg.static.url}img/visual/{$visual->path}"></div>
           <div id="debug"></div>
           <script>window.start3d();</script>
         </div>
@@ -32,36 +33,38 @@
 
       <div class="panel panel-default">
         <div class="panel-heading">
-          Adaugă o etichetă nouă
+          Administrare etichete
         </div>
         <div class="panel-body">
           <form class="form-horizontal" method="post">
             <input type="hidden" name="id" value="{$visual->id}">
+            <table id="table-assign" class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Nume obiect</th>
+                  <th>Etichetă</th>
+                <tr>
+              </thead>
+              <tbody>
+                {foreach $tags as $tag}
+                  <tr>
+                    <td id="{$tag->meshName}"></td>
+                    <td><select name="mapping_{$tag->meshName}">
+                      <option value="{$tag->entryId}" selected="selected">{$tag->getTitle()}</option>
+                    </select></td>
+                  </tr>
+                {/foreach}
+              </tbody>
+            </table>
 
-            <div class="form-group">
-              <label class="col-sm-3 control-label">
-                intrare
-              </label>
-              <div class="col-sm-9">
-                <select id="tagEntryId" class="form-control" name="tagEntryId">
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <div class="col-sm-offset-3 col-sm-9">
-                <button id="addTagButton" type="submit" class="btn btn-success" name="addTagButton">
-                  <i class="glyphicon glyphicon-floppy-disk"></i>
-                  salvează eticheta
-                </button>
-              </div>
-            </div>
-
+            <button type="submit" class="btn btn-success" name="addTagButton">
+              <i class="glyphicon glyphicon-floppy-disk"></i>
+              salvează etichete
+            </button>
           </form>
         </div>
       </div>
 
-    </div>
   </div>
 
 {/block}

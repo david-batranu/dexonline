@@ -101,7 +101,7 @@ class Visual extends BaseObject implements DatedObject {
 
   function delete() {
     // TODO: Delete thumbnail and its directory (if it becomes empty)
-    VisualTag::delete_all_by_imageId($this->id);    
+    VisualTag::delete_all_by_imageId($this->id);
     return parent::delete();
   }
 }

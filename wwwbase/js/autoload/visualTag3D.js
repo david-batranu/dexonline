@@ -1,12 +1,16 @@
 $(function() {
 
   function init() {
-    $('#tagEntryId').select2({
-      ajax: { url: wwwRoot + 'ajax/getEntries.php' },
-      minimumInputLength: 1,
-      placeholder: 'caută o intrare',
-      width: '300px',
-    }).change(console.log);
+    var selects = [].slice.call(document.getElementsByTagName('select'));
+    selects.forEach(function(select){
+      var value = select.getElementsByTagName('option')[0].getAttribute('value');
+      $(select).select2({
+        ajax: { url: wwwRoot + 'ajax/getEntries.php' },
+        minimumInputLength: 1,
+        placeholder: 'caută o intrare',
+        width: '300px',
+      }).change(console.log);
+    });
   }
 
   init();
@@ -75,21 +79,24 @@ window.start3d = (function(){
           child.add(wireframe);
           child.wireframe = wireframe;
           var tag = document.createElement('a');
-          tag.style.display = 'block';
           tag.setAttribute('href', '#');
           tag.textContent = child.name;
-          tag.addEventListener('mouseover', function(evt){
+          tag.addEventListener('click', function(evt){
+            evt.preventDefault();
             var obj = scene.getObjectByName(evt.target.textContent);
-            obj.material_bak = obj.material;
-            obj.material = MAT_HIGHLIGHT;
-            obj.wireframe.visible = true;
+            if (obj.material_bak) {
+              obj.material = obj.material_bak;
+              obj.wireframe.visible = false;
+              delete obj.material_bak;
+            }
+            else {
+              obj.material_bak = obj.material;
+              obj.material = MAT_HIGHLIGHT;
+              obj.wireframe.visible = true;
+            }
           });
-          tag.addEventListener('mouseout', function(evt){
-            var obj = scene.getObjectByName(evt.target.textContent);
-            obj.material = obj.material_bak;
-            obj.wireframe.visible = false;
-          });
-          debug.appendChild(tag);
+
+          add_table_entry(child.name, tag);
         });
 
         scene.add(object);
@@ -126,6 +133,37 @@ window.start3d = (function(){
 
   function render() {
     renderer.render(scene, camera);
+  }
+
+  function add_table_entry(name, elem) {
+    var cell_name_exists = document.getElementById(name);
+    if (cell_name_exists) {
+      cell_name_exists.appendChild(elem);
+    }
+    else {
+      var row = document.createElement('tr');
+      var cell_name = document.createElement('td');
+      var cell_assign = document.createElement('td');
+      var assign_select = document.createElement('select');
+      assign_select.setAttribute('name', 'mapping_' + name);
+      var tbody = document.getElementById('table-assign').getElementsByTagName('tbody')[0];
+
+      cell_name.appendChild(elem);
+      cell_assign.appendChild(assign_select);
+
+      row.appendChild(cell_name);
+      row.appendChild(cell_assign);
+
+      tbody.appendChild(row);
+
+      $(assign_select).select2({
+        ajax: { url: wwwRoot + 'ajax/getEntries.php' },
+        minimumInputLength: 1,
+        placeholder: 'caută o intrare',
+        width: '300px',
+      }).change(console.log);
+    }
+
   }
 
   init();

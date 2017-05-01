@@ -11,6 +11,16 @@ class Request {
       : $default;
   }
 
+  static function getStartsWith($name) {
+    $results = [];
+    foreach($_POST as $key => $value) {
+      if(preg_match('@^'.$name.'@', $key)) {
+        $results[$key] = $value;
+      }
+    }
+    return $results;
+  }
+
   /* Reads a file record from $_FILES. */
   static function getFile($name, $default = null) {
     return array_key_exists($name, $_FILES)
