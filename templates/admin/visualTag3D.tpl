@@ -3,6 +3,10 @@
 {block "title"}Etichetare 3D{/block}
 
 {block "content"}
+  <script src="{$wwwRoot}js/third-party/three/three.js"></script>
+  <script src="{$wwwRoot}js/third-party/three/controls/OrbitControls.js"></script>
+  <script src="{$wwwRoot}js/third-party/three/Detector.js"></script>
+
   <h3>Etichetare 3D: {$visual->path}</h3>
 
   <p>
@@ -14,6 +18,17 @@
 
   <div class="row">
     <div class="col-md-6">
+
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Preview
+        </div>
+        <div class="panel-body">
+          <div id="3dpreview" data-src="{$cfg.static.url}img/visual/{$visual->path}"></div>
+          <div id="debug"></div>
+          <script>window.start3d();</script>
+        </div>
+      </div>
 
       <div class="panel panel-default">
         <div class="panel-heading">
