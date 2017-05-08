@@ -34,7 +34,6 @@ class Request {
     /* PHP strips dots from $_POST */
     $POST = self::getRealPOST();
     foreach($POST as $key => $value) {
-      error_log($key);
       if(preg_match('@^'.$name.'@', $key)) {
         $results[$key] = $value;
       }

@@ -51,7 +51,11 @@
                     <td id="{$tag->meshName}"></td>
                     <td><select name="mapping_{$tag->meshName}">
                       <option value="{$tag->entryId}" selected="selected">{$tag->getTitle()}</option>
-                    </select></td>
+                    </select>
+                    <button class="btn btn-sm btn-danger" name="clearTagButton" value="{$tag->meshName}">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </button>
+                    </td>
                   </tr>
                 {/foreach}
               </tbody>

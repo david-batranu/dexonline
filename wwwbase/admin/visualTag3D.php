@@ -6,8 +6,9 @@ Util::assertNotMirror();
 $fileName = Request::get('fileName');
 $id = Request::get('id');
 $addTagButton = Request::has('addTagButton');
+$clearTagButton = Request::has('clearTagButton');
 
-// Tag the image specified by $fileName. Create a Visual object if one doesn't exist, then redirect to it.
+// Tag the model specified by $fileName. Create a Visual object if one doesn't exist, then redirect to it.
 if ($fileName) {
   $v = Visual3D::get_by_path($fileName);
   if (!$v) {
@@ -27,7 +28,19 @@ function unwrap_mapping($arr, $split_on){
   return $result;
 }
 
-if ($addTagButton) {
+if($clearTagButton) {
+  $existing = Model::factory('VisualTag3D')
+    ->where('modelId', $v->id)
+    ->where('meshName', Request::get('clearTagButton'))
+    ->find_one();
+  if($existing){
+    $entry = Entry::get_by_id($existing->entryId);
+    $existing->delete();
+    Log::info("Deleted 3d tag {$existing->id} ({$existing->meshName}) to {$entry->id} ({$entry->description}) for model {$v->id} ({$v->path}).");
+  }
+
+}
+else if ($addTagButton) {
   $mapping = unwrap_mapping(Request::getStartsWith('mapping_'),  'mapping_');
   foreach($mapping as $mesh_name => $entry_id) {
     $existing = Model::factory('VisualTag3D')
@@ -39,7 +52,7 @@ if ($addTagButton) {
         $existing->entryId = $entry_id;
         $existing->save();
         $entry = Entry::get_by_id($existing->entryId);
-        Log::info("Edited 3d tag {$existing->id} ({$entry->description}) to image {$existing->id} ({$v->path})");
+        Log::info("Edited 3d tag {$existing->id} ({$existing->meshName}) to {$entry->id} ({$entry->description}) for model {$v->id} ({$v->path}).");
       }
     }
     else {
@@ -49,8 +62,9 @@ if ($addTagButton) {
       $vt->entryId = $entry_id;
       $vt->save();
 
-      $entry = Entry::get_by_id($vt->entry_id);
-      Log::info("Added 3d tag {$vt->id} ({$entry->description}) to image {$v->id} ({$v->path})");
+      $entry = Entry::get_by_id($vt->entryId);
+      error_log($entry->id);
+      Log::info("Added 3d tag {$vt->id} ({$mesh_name}) to {$entry->id} ({$entry->description}) for model {$v->id} ({$v->path}).");
     }
   }
   Util::redirect("?id={$v->id}");
