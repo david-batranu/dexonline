@@ -35,10 +35,12 @@ if ($addTagButton) {
         ->where('meshName', $mesh_name)
         ->find_one();
     if($existing) {
-      $existing->entryId = $entry_id;
-      $existing->save();
-      $entry = Entry::get_by_id($existing->entryId);
-      Log::info("Edited 3d tag {$existing->id} ({$entry->description}) to image {$existing->id} ({$v->path})");
+      if($existing->entryId != $entry_id) {
+        $existing->entryId = $entry_id;
+        $existing->save();
+        $entry = Entry::get_by_id($existing->entryId);
+        Log::info("Edited 3d tag {$existing->id} ({$entry->description}) to image {$existing->id} ({$v->path})");
+      }
     }
     else {
       $vt = Model::factory('VisualTag3D')->create();

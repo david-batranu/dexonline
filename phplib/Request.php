@@ -11,9 +11,30 @@ class Request {
       : $default;
   }
 
+  // Taken from http://stackoverflow.com/a/1939911
+  // Function to fix up PHP's messing up input containing dots, etc.
+  // `$source` can be either 'POST' or 'GET'
+  static function getRealInput($source) {
+      $pairs = explode("&", $source == 'POST' ? file_get_contents("php://input") : $_SERVER['QUERY_STRING']);
+      $vars = array();
+      foreach ($pairs as $pair) {
+          $nv = explode("=", $pair);
+          $name = urldecode($nv[0]);
+          $value = urldecode($nv[1]);
+          $vars[$name] = $value;
+      }
+      return $vars;
+  }
+
+  // Wrapper functions specifically for GET and POST:
+  static function getRealGET() { return self::getRealInput('GET'); }
+  static function getRealPOST() { return self::getRealInput('POST'); }
+
   static function getStartsWith($name) {
-    $results = [];
-    foreach($_POST as $key => $value) {
+    /* PHP strips dots from $_POST */
+    $POST = self::getRealPOST();
+    foreach($POST as $key => $value) {
+      error_log($key);
       if(preg_match('@^'.$name.'@', $key)) {
         $results[$key] = $value;
       }
