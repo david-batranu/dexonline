@@ -35,7 +35,7 @@ window.start3d = (function(){
   });
 
 
-  function init() {
+  function init(loadCallback) {
     container = document.getElementById('3dpreview');
     camera = new THREE.PerspectiveCamera(45, RESOLUTION[0] / RESOLUTION[1], 1, 2000);
     scene = new THREE.Scene();
@@ -101,6 +101,7 @@ window.start3d = (function(){
 
         scene.add(object);
         controls.target.copy(object.position);
+        loadCallback();
       },
       onProgress, onError
     );
@@ -144,15 +145,41 @@ window.start3d = (function(){
       var row = document.createElement('tr');
       var cell_name = document.createElement('td');
       var cell_assign = document.createElement('td');
+      var cell_camera = document.createElement('td');
+
       var assign_select = document.createElement('select');
       assign_select.setAttribute('name', 'mapping_' + name);
+
+      var elem_camera_input = document.createElement('input');
+      elem_camera_input.setAttribute('type', 'hidden');
+      elem_camera_input.setAttribute('id', 'camera_' + name);
+      elem_camera_input.setAttribute('name', 'camera_' + name);
+      elem_camera_input.setAttribute('value', encodeVector(camera.position));
+
+      function factory_camera_button(action, name, text) {
+        var elem = document.createElement('button');
+        elem.setAttribute('data-action', action);
+        elem.setAttribute('data-mesh', name);
+        elem.setAttribute('class', 'btn btn-sm btn-default');
+        elem.textContent = text;
+        return elem;
+      }
+
+      elem_camera_save = factory_camera_button('save-camera', name, 'Salvează poziția camerei');
+      elem_camera_restore = factory_camera_button('restore-camera', name, 'Aplică poziția camerei');
+
       var tbody = document.getElementById('table-assign').getElementsByTagName('tbody')[0];
 
       cell_name.appendChild(elem);
       cell_assign.appendChild(assign_select);
 
+      cell_camera.appendChild(elem_camera_input);
+      cell_camera.appendChild(elem_camera_save);
+      cell_camera.appendChild(elem_camera_restore);
+
       row.appendChild(cell_name);
       row.appendChild(cell_assign);
+      row.appendChild(cell_camera);
 
       tbody.appendChild(row);
 
@@ -166,6 +193,55 @@ window.start3d = (function(){
 
   }
 
-  init();
+  function init_camera_save() {
+    var buttons = [].slice.call(document.querySelectorAll('[data-action="save-camera"]'));
+    buttons.forEach(function(button) {
+      button.addEventListener('click', function(evt) {
+        evt.preventDefault();
+        var mesh = button.getAttribute('data-mesh');
+        var target = document.getElementById('camera_' + mesh);
+        target.setAttribute('value', encodeVector(camera.position));
+      });
+    });
+  }
+
+  function init_camera_restore() {
+    var buttons = [].slice.call(document.querySelectorAll('[data-action="restore-camera"]'));
+    buttons.forEach(function(button) {
+      button.addEventListener('click', function(evt) {
+        evt.preventDefault();
+        var mesh = button.getAttribute('data-mesh');
+        var target = document.getElementById('camera_' + mesh);
+        var saved = decodeVector(target.getAttribute('value'));
+        camera.position.set(saved.x, saved.y, saved.z);
+        controls.update();
+      });
+    });
+  }
+
+  function init_default_cameras() {
+    var inputs = [].slice.call(document.querySelectorAll('[id*="camera_"]'));
+    var camera_position = encodeVector(camera.position);
+    inputs.forEach(function(input){
+      if(input.getAttribute('value') === '') {
+        input.setAttribute('value', camera_position)
+      }
+    });
+  }
+
+  function encodeVector(value) {
+    return [value.x, value.y, value.z].join(',')
+  }
+
+  function decodeVector(value) {
+    var arr = value.split(',').map(parseFloat);
+    return new THREE.Vector3(arr[0], arr[1], arr[2])
+  }
+
+  init(function(){
+    init_default_cameras();
+    init_camera_save();
+    init_camera_restore();
+  });
 
 });

@@ -42,14 +42,23 @@ if($clearTagButton) {
 }
 else if ($addTagButton) {
   $mapping = unwrap_mapping(Request::getStartsWith('mapping_'),  'mapping_');
+  $camera_positions = unwrap_mapping(Request::getStartsWith('camera_'),  'camera_');
   foreach($mapping as $mesh_name => $entry_id) {
     $existing = Model::factory('VisualTag3D')
         ->where('modelId', $v->id)
         ->where('meshName', $mesh_name)
         ->find_one();
     if($existing) {
+      $changed = false;
       if($existing->entryId != $entry_id) {
         $existing->entryId = $entry_id;
+        $changed = true;
+      }
+      if($existing->camera != $camera_positions[$mesh_name]) {
+        $existing->camera = $camera_positions[$mesh_name];
+        $changed = true;
+      }
+      if($changed) {
         $existing->save();
         $entry = Entry::get_by_id($existing->entryId);
         Log::info("Edited 3d tag {$existing->id} ({$existing->meshName}) to {$entry->id} ({$entry->description}) for model {$v->id} ({$v->path}).");
@@ -60,6 +69,7 @@ else if ($addTagButton) {
       $vt->modelId = $v->id;
       $vt->meshName = $mesh_name;
       $vt->entryId = $entry_id;
+      $vt->camera = $camera_positions[$mesh_name];
       $vt->save();
 
       $entry = Entry::get_by_id($vt->entryId);

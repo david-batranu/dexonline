@@ -27,7 +27,6 @@
             id="3dpreview" style="text-align: center"
             data-src="{$cfg.static.url}img/visual/{$visual->path}"></div>
           <div id="debug"></div>
-          <script>window.start3d();</script>
         </div>
       </div>
 
@@ -43,6 +42,7 @@
                 <tr>
                   <th>Nume obiect</th>
                   <th>Etichetă</th>
+                  <th>Camera</th>
                 <tr>
               </thead>
               <tbody>
@@ -54,6 +54,15 @@
                     </select>
                     <button class="btn btn-sm btn-danger" name="clearTagButton" value="{$tag->meshName}">
                         <span class="glyphicon glyphicon-trash"></span>
+                    </button>
+                    </td>
+                    <td>
+                    <input type="hidden" id="camera_{$tag->meshName}" name="camera_{$tag->meshName}" value="{$tag->camera}" />
+                    <button class="btn btn-sm btn-default" data-action="save-camera" data-mesh="{$tag->meshName}">
+                        Salvează poziția camerei
+                    </button>
+                    <button class="btn btn-sm btn-default" data-action="restore-camera" data-mesh="{$tag->meshName}">
+                        Aplică poziția camerei
                     </button>
                     </td>
                   </tr>
@@ -70,6 +79,8 @@
       </div>
 
   </div>
+
+  <script>window.start3d();</script>
 
 {/block}
 

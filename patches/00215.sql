@@ -10,6 +10,7 @@ CREATE TABLE VisualTag3D (
   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   modelId INT(11),
   meshName VARCHAR(255) NOT NULL,
+  camera VARCHAR(255) NOT NULL,
   entryId INT(11),
   createDate INT(11),
   modDate INT(11)
