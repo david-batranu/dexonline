@@ -6,6 +6,24 @@
   <script src="{$wwwRoot}js/third-party/three/three.js"></script>
   <script src="{$wwwRoot}js/third-party/three/controls/OrbitControls.js"></script>
   <script src="{$wwwRoot}js/third-party/three/Detector.js"></script>
+  <style>
+    .canvas-container {
+      position: relative;
+    }
+
+    #preview-3d {
+      position: absolute;
+      z-index: 8;
+      border: 1px solid red;
+    }
+
+    #overlay-2d {
+      position: absolute;
+      border: 1px solid black;
+      pointer-events: none;
+      z-index: 10;
+    }
+  </style>
 
   <h3>Etichetare 3D: {$visual->path}</h3>
 
@@ -22,11 +40,15 @@
         <div class="panel-heading">
           Preview
         </div>
-        <div class="panel-body">
-          <div
-            id="3dpreview" style="text-align: center"
-            data-src="{$cfg.static.url}img/visual/{$visual->path}"></div>
-          <div id="debug"></div>
+        <div class="panel-body" style="width: 800px; height: 600px">
+          <div class="canvas-container">
+              <div
+                id="preview-3d" style="text-align: center"
+                data-src="{$cfg.static.url}img/visual/{$visual->path}"></div>
+              <div id="overlay-2d">
+                <canvas width="800" height="600"></canvas>
+              </div>
+          </div>
         </div>
       </div>
 

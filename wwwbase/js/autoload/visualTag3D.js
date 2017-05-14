@@ -30,13 +30,36 @@ window.start3d = (function(){
 
   var clock = new THREE.Clock();
 
+  var MESHES;
+  var UI = document.getElementById('overlay-2d').getElementsByTagName('canvas')[0].getContext('2d');
+
   var MAT_HIGHLIGHT = new THREE.MeshPhongMaterial({
     color: new THREE.Color(1, 0, 0)
   });
 
 
+  window.toScreen = function(obj) {
+    var box = new THREE.Box3();
+    box.setFromObject(obj);
+
+    var pos = box.getCenter().clone();
+    // pos = pos.setFromMatrixPosition(obj.matrixWorld);
+    pos.project(camera);
+
+    var widthHalf = RESOLUTION[0] / 2;
+    var heightHalf = RESOLUTION[1] / 2;
+
+    pos.x = (pos.x * widthHalf) + widthHalf;
+    pos.y = - (pos.y * heightHalf) + heightHalf;
+    pos.z = 0;
+
+    return [pos.x, pos.y];
+
+    console.log(pos);
+  }
+
   function init(loadCallback) {
-    container = document.getElementById('3dpreview');
+    container = document.getElementById('preview-3d');
     camera = new THREE.PerspectiveCamera(45, RESOLUTION[0] / RESOLUTION[1], 1, 2000);
     scene = new THREE.Scene();
 
@@ -73,8 +96,8 @@ window.start3d = (function(){
           return wireframe;
         }
 
-        var meshes = object.children.filter(function(c) { return c.type === 'Mesh' });
-        meshes.forEach(function(child){
+        MESHES = object.children.filter(function(c) { return c.type === 'Mesh' });
+        MESHES.forEach(function(child){
           var wireframe = wireframe_from_geo(child.geometry);
           child.add(wireframe);
           child.wireframe = wireframe;
@@ -128,6 +151,16 @@ window.start3d = (function(){
   }
 
   function animate() {
+    UI.clearRect(0, 0, 800, 600);
+    if (MESHES && UI && window.toScreen) {
+      var centers = MESHES.map(window.toScreen);
+      centers.forEach(function(xy) {
+        UI.beginPath();
+        UI.moveTo(0, 0);
+        UI.lineTo(xy[0], xy[1]);
+        UI.stroke();
+      });
+    }
     requestAnimationFrame(animate);
     render();
   }
