@@ -139,8 +139,11 @@ window.start3d = (function(){
     // Controls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
-    camera.position.set(0, 0, 10);
+    camera.position.set(0, 0, 20);
     controls.update();
+
+    // var axisHelper = new THREE.AxisHelper( 5 );
+    // scene.add( axisHelper );
 
     // Lights
     // var light = new THREE.AmbientLight(0xffffff);
@@ -153,12 +156,26 @@ window.start3d = (function(){
   function animate() {
     UI.clearRect(0, 0, 800, 600);
     if (MESHES && UI && window.toScreen) {
-      var centers = MESHES.map(window.toScreen);
-      centers.forEach(function(xy) {
+      var centers = MESHES.map(window.toScreen).sort(function(a, b) {
+        return a[1] - b[1];
+      });
+      centers.forEach(function(xy, idx) {
+        var edg_x = xy[0] + 1 > RESOLUTION[0] / 2 ? RESOLUTION[0] : 0;
+        var edg_y = xy[1] + 1 > RESOLUTION[1] / 2 ? RESOLUTION[1] : 0;
+
+        var pos_x = Math.abs(edg_x - xy[0]) / 3;
+        var pos_y = Math.abs(edg_y - xy[1]) / 3;
+
+        var tag_x = Math.abs(((Boolean(edg_x) && 1 || -1) * pos_x) + xy[0]) + idx * 10;
+        var tag_y = Math.abs(((Boolean(edg_y) && 1 || -1) * pos_y) + xy[1]) + idx * 10;
+
         UI.beginPath();
-        UI.moveTo(0, 0);
+        UI.moveTo(tag_x, tag_y);
         UI.lineTo(xy[0], xy[1]);
+        UI.lineWidth = 0.5;
         UI.stroke();
+        UI.font = "12px Arial";
+        UI.fillText(MESHES[idx].name, tag_x, tag_y);
       });
     }
     requestAnimationFrame(animate);
