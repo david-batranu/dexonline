@@ -6,9 +6,22 @@
 class Request {
   /* Reads a request parameter. */
   static function get($name, $default = null) {
-    return array_key_exists($name, $_REQUEST)
-      ? $_REQUEST[$name]
-      : $default;
+    if (!array_key_exists($name, $_REQUEST)) {
+      return $default;
+    } else if (is_string($_REQUEST[$name])) {
+      return AdminStringUtil::cleanup($_REQUEST[$name]);
+    } else {
+      return $_REQUEST[$name];
+    }
+  }
+
+  /* Reads a request parameter. Performs no cleanup. */
+  static function getRaw($name, $default = null) {
+    if (!array_key_exists($name, $_REQUEST)) {
+      return $default;
+    } else {
+      return $_REQUEST[$name];
+    }
   }
 
   // Taken from http://stackoverflow.com/a/1939911

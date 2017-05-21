@@ -80,7 +80,6 @@ $hasDiacritics = Session::userPrefers(Preferences::FORCE_DIACRITICS);
 $oldOrthography = Session::userPrefers(Preferences::OLD_ORTHOGRAPHY);
 $hasRegexp = FALSE;
 $isAllDigits = FALSE;
-$showParadigm = $showParadigm || Session::userPrefers(Preferences::SHOW_PARADIGM);
 $all = $all || $showParadigm;
 
 $source = $sourceUrlName ? Source::get_by_urlName($sourceUrlName) : null;
@@ -285,7 +284,8 @@ list($extra['unofficialHidden'], $extra['sourcesHidden'])
   = SearchResult::filter($results);
 
 // Filter out structured definitions if we are displaying trees
-if ($SEARCH_PARAMS[$searchType]['trees']) {
+// unless there is a source filter
+if ($SEARCH_PARAMS[$searchType]['trees'] && !$sourceId) {
   foreach ($results as $i => $sr) {
     if ($sr->definition->structured) {
       $structuredResults[] = $sr;
@@ -412,6 +412,10 @@ if (count($images)) {
   SmartyWrap::addCss('gallery');
   SmartyWrap::addJs('gallery', 'jcanvas');
 }
+
+// We cannot show the paradigm tab by default if there isn't one to show.
+$showParadigm = ($showParadigm || Session::userPrefers(Preferences::SHOW_PARADIGM))
+  && $SEARCH_PARAMS[$searchType]['paradigm'];
 
 SmartyWrap::assign('entries', $entries);
 SmartyWrap::assign('lexems', $lexems);
