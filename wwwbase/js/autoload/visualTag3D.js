@@ -63,6 +63,23 @@ window.start3d = (function(){
     camera = new THREE.PerspectiveCamera(45, RESOLUTION[0] / RESOLUTION[1], 1, 2000);
     scene = new THREE.Scene();
 
+    function clone_event(evt) {
+      var new_evt;
+      if (evt.type === 'wheel') {
+        new_evt = new WheelEvent(evt.type, evt);
+        evt.preventDefault();
+      } else {
+        new_evt = new MouseEvent(evt.type, evt);
+      };
+      container.getElementsByTagName('canvas')[0].dispatchEvent(new_evt);
+    }
+
+    ['mousedown', 'mouseenter', 'mouseleave', 'mousemove', 'mouseout', 'mouseover', 'mouseup', 'scroll', 'wheel']
+      .forEach(function(evt_type){
+        UI.canvas.addEventListener(evt_type, clone_event);
+      });
+
+
     var manager = new THREE.LoadingManager();
     manager.onProgress = function(item, loaded, total) {
       console.log(item, loaded, total);

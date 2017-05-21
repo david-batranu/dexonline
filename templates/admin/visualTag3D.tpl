@@ -20,7 +20,6 @@
     #overlay-2d {
       position: absolute;
       border: 1px solid black;
-      pointer-events: none;
       z-index: 10;
     }
   </style>
