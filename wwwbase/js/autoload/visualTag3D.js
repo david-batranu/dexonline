@@ -53,7 +53,7 @@ window.start3d = (function(){
     pos.y = - (pos.y * heightHalf) + heightHalf;
     pos.z = 0;
 
-    return [pos.x, pos.y];
+    return [pos.x, pos.y, obj];
 
     console.log(pos);
   }
@@ -177,14 +177,16 @@ window.start3d = (function(){
         return a[1] - b[1];
       });
       centers.forEach(function(xy, idx) {
+        var mesh = xy[2];
+
         var edg_x = xy[0] + 1 > RESOLUTION[0] / 2 ? RESOLUTION[0] : 0;
         var edg_y = xy[1] + 1 > RESOLUTION[1] / 2 ? RESOLUTION[1] : 0;
 
         var pos_x = Math.abs(edg_x - xy[0]) / 3;
         var pos_y = Math.abs(edg_y - xy[1]) / 3;
 
-        var tag_x = Math.abs(((Boolean(edg_x) && 1 || -1) * pos_x) + xy[0]) + idx * 10;
-        var tag_y = Math.abs(((Boolean(edg_y) && 1 || -1) * pos_y) + xy[1]) + idx * 10;
+        var tag_x = Math.abs(((Math.sign(edg_x) || -1) * pos_x) + xy[0]) + (idx * 10);
+        var tag_y = Math.abs(((Math.sign(edg_y) || -1) * pos_y) + xy[1]) + (idx * 50);
 
         UI.beginPath();
         UI.moveTo(tag_x, tag_y);
@@ -192,7 +194,7 @@ window.start3d = (function(){
         UI.lineWidth = 0.5;
         UI.stroke();
         UI.font = "12px Arial";
-        UI.fillText(MESHES[idx].name, tag_x, tag_y);
+        UI.fillText(mesh.name, tag_x, tag_y);
       });
     }
     requestAnimationFrame(animate);
