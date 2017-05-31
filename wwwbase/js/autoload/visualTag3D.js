@@ -19,7 +19,7 @@ $(function() {
 
 window.start3d = (function(){
 
-  var RESOLUTION = [800, 600];
+  var RESOLUTION = {w: 800, h: 600};
 
   if (!Detector.webgl) { Detector.addGetWebGLMessage(); };
 
@@ -46,8 +46,8 @@ window.start3d = (function(){
     // pos = pos.setFromMatrixPosition(obj.matrixWorld);
     pos.project(camera);
 
-    var widthHalf = RESOLUTION[0] / 2;
-    var heightHalf = RESOLUTION[1] / 2;
+    var widthHalf = RESOLUTION.w / 2;
+    var heightHalf = RESOLUTION.h / 2;
 
     pos.x = (pos.x * widthHalf) + widthHalf;
     pos.y = - (pos.y * heightHalf) + heightHalf;
@@ -60,7 +60,7 @@ window.start3d = (function(){
 
   function init(loadCallback) {
     container = document.getElementById('preview-3d');
-    camera = new THREE.PerspectiveCamera(45, RESOLUTION[0] / RESOLUTION[1], 1, 2000);
+    camera = new THREE.PerspectiveCamera(45, RESOLUTION.w / RESOLUTION.h, 1, 2000);
     scene = new THREE.Scene();
 
     function clone_event(evt) {
@@ -149,7 +149,7 @@ window.start3d = (function(){
     // Renderer
     renderer = new THREE.WebGLRenderer();
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(RESOLUTION[0], RESOLUTION[1]);
+    renderer.setSize(RESOLUTION.w, RESOLUTION.h);
     renderer.setClearColor(0xededed);
     container.appendChild(renderer.domElement);
 
@@ -176,25 +176,58 @@ window.start3d = (function(){
       var centers = MESHES.map(window.toScreen).sort(function(a, b) {
         return a[1] - b[1];
       });
+      var cc = {x: RESOLUTION.w / 2, y: RESOLUTION.h / 2}; // canvas center
       centers.forEach(function(xy, idx) {
         var mesh = xy[2];
 
-        var edg_x = xy[0] + 1 > RESOLUTION[0] / 2 ? RESOLUTION[0] : 0;
-        var edg_y = xy[1] + 1 > RESOLUTION[1] / 2 ? RESOLUTION[1] : 0;
 
-        var pos_x = Math.abs(edg_x - xy[0]) / 3;
-        var pos_y = Math.abs(edg_y - xy[1]) / 3;
+	var mc = {x: xy[0] + 1, y: xy[1] + 1}; // mesh center
 
-        var tag_x = Math.abs(((Math.sign(edg_x) || -1) * pos_x) + xy[0]) + (idx * 10);
-        var tag_y = Math.abs(((Math.sign(edg_y) || -1) * pos_y) + xy[1]) + (idx * 50);
+	var ray = {
+	  a: mc.y - cc.y,
+	  b: cc.x - mc.x,
+	  c: cc.y * (mc.x - cc.x) - cc.x * (mc.y - cc.y)
+	} // line through cc and mc
+
+
+	var inters = [];
+	if (ray.b) {
+	  inters.push({x: 0, y: -ray.c / ray.b});
+	  inters.push({x: RESOLUTION.w, y: (-ray.c - ray.a * RESOLUTION.w) / ray.b});
+	}
+
+	if (ray.a) {
+	  inters.push({y: 0, x: -ray.c / ray.a});
+	  inters.push({y: RESOLUTION.h, x: (-ray.c - ray.b * RESOLUTION.h) / ray.a});
+	}
+
+	if (!inters.length) { // can happen if mc == cc
+	  inters.push({x: 0, y: 0});
+	}
+
+	function dist_sq(p1, p2) {
+	  return (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2;
+	}
+
+	var min_inter = inters.reduce(function(acc, point) {
+	  if (!acc) { return point };
+	  if (dist_sq(mc, acc) < dist_sq(mc, point)) { return acc }
+	  return point;
+	}, null);
+
+	console.log('a', min_inter, 'b', mc, 'c', cc, 'd', inters);
+	var tag = {
+	  x: (min_inter.x + mc.x) / 2,
+	  y: (min_inter.y + mc.y) / 2
+	}
 
         UI.beginPath();
-        UI.moveTo(tag_x, tag_y);
-        UI.lineTo(xy[0], xy[1]);
+        UI.moveTo(tag.x, tag.y);
+        UI.lineTo(mc.x, mc.y);
         UI.lineWidth = 0.5;
         UI.stroke();
         UI.font = "12px Arial";
-        UI.fillText(mesh.name, tag_x, tag_y);
+        UI.fillText(mesh.name, tag.x, tag.y);
       });
     }
     requestAnimationFrame(animate);
