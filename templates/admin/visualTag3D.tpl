@@ -6,6 +6,7 @@
   <script src="{$wwwRoot}js/third-party/three/three.js"></script>
   <script src="{$wwwRoot}js/third-party/three/controls/OrbitControls.js"></script>
   <script src="{$wwwRoot}js/third-party/three/Detector.js"></script>
+  <script src="{$wwwRoot}js/third-party/three/ColladaLoader.js"></script>
   <style>
     .canvas-container {
       position: relative;
@@ -104,4 +105,3 @@
   <script>window.start3d();</script>
 
 {/block}
-

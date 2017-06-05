@@ -96,10 +96,11 @@ window.start3d = (function(){
       console.log(xhr);
     };
 
-    var loader = new THREE.ObjectLoader(manager);
+    var loader = new THREE.ColladaLoader(manager);
     loader.load(
       container.getAttribute('data-src'),
-      function(object) {
+      function(collada) {
+        var object = collada.scene;
 
         function wireframe_from_geo(geometry) {
           var wireframe_geo = new THREE.EdgesGeometry(geometry);
@@ -113,17 +114,33 @@ window.start3d = (function(){
           return wireframe;
         }
 
-        MESHES = object.children.filter(function(c) { return c.type === 'Mesh' });
+        function hunt_meshes(arr, acc) {
+          arr.forEach(function(item) {
+            if (item.children) {
+              hunt_meshes(item.children, acc);
+            }
+            if (item.type === 'Mesh') {
+              acc.push(item);
+            }
+          });
+        };
+
+        MESHES = function() {
+          var acc = [];
+          hunt_meshes(object.children, acc);
+          return acc;
+        }();
+
         MESHES.forEach(function(child){
           var wireframe = wireframe_from_geo(child.geometry);
           child.add(wireframe);
           child.wireframe = wireframe;
           var tag = document.createElement('a');
           tag.setAttribute('href', '#');
-          tag.textContent = child.name;
+          tag.textContent = child.name ? child.name : child.parent.name;
           tag.addEventListener('click', function(evt){
             evt.preventDefault();
-            var obj = scene.getObjectByName(evt.target.textContent);
+            var obj = scene.getObjectById(child.id);
             if (obj.material_bak) {
               obj.material = obj.material_bak;
               obj.wireframe.visible = false;
@@ -181,45 +198,44 @@ window.start3d = (function(){
         var mesh = xy[2];
 
 
-	var mc = {x: xy[0] + 1, y: xy[1] + 1}; // mesh center
+        var mc = {x: xy[0] + 1, y: xy[1] + 1}; // mesh center
 
-	var ray = {
-	  a: mc.y - cc.y,
-	  b: cc.x - mc.x,
-	  c: cc.y * (mc.x - cc.x) - cc.x * (mc.y - cc.y)
-	} // line through cc and mc
+        var ray = {
+          a: mc.y - cc.y,
+          b: cc.x - mc.x,
+          c: cc.y * (mc.x - cc.x) - cc.x * (mc.y - cc.y)
+        } // line through cc and mc
 
 
-	var inters = [];
-	if (ray.b) {
-	  inters.push({x: 0, y: -ray.c / ray.b});
-	  inters.push({x: RESOLUTION.w, y: (-ray.c - ray.a * RESOLUTION.w) / ray.b});
-	}
+        var inters = [];
+        if (ray.b) {
+          inters.push({x: 0, y: -ray.c / ray.b});
+          inters.push({x: RESOLUTION.w, y: (-ray.c - ray.a * RESOLUTION.w) / ray.b});
+        }
 
-	if (ray.a) {
-	  inters.push({y: 0, x: -ray.c / ray.a});
-	  inters.push({y: RESOLUTION.h, x: (-ray.c - ray.b * RESOLUTION.h) / ray.a});
-	}
+        if (ray.a) {
+          inters.push({y: 0, x: -ray.c / ray.a});
+          inters.push({y: RESOLUTION.h, x: (-ray.c - ray.b * RESOLUTION.h) / ray.a});
+        }
 
-	if (!inters.length) { // can happen if mc == cc
-	  inters.push({x: 0, y: 0});
-	}
+        if (!inters.length) { // can happen if mc == cc
+          inters.push({x: 0, y: 0});
+        }
 
-	function dist_sq(p1, p2) {
-	  return (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2;
-	}
+        function dist_sq(p1, p2) {
+          return (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2;
+        }
 
-	var min_inter = inters.reduce(function(acc, point) {
-	  if (!acc) { return point };
-	  if (dist_sq(mc, acc) < dist_sq(mc, point)) { return acc }
-	  return point;
-	}, null);
+        var min_inter = inters.reduce(function(acc, point) {
+          if (!acc) { return point };
+          if (dist_sq(mc, acc) < dist_sq(mc, point)) { return acc }
+          return point;
+        }, null);
 
-	console.log('a', min_inter, 'b', mc, 'c', cc, 'd', inters);
-	var tag = {
-	  x: (min_inter.x + mc.x) / 2,
-	  y: (min_inter.y + mc.y) / 2
-	}
+        var tag = {
+          x: (min_inter.x + mc.x) / 2,
+          y: (min_inter.y + mc.y) / 2
+        }
 
         UI.beginPath();
         UI.moveTo(tag.x, tag.y);
@@ -227,7 +243,7 @@ window.start3d = (function(){
         UI.lineWidth = 0.5;
         UI.stroke();
         UI.font = "12px Arial";
-        UI.fillText(mesh.name, tag.x, tag.y);
+        UI.fillText(mesh.name ? mesh.name : mesh.parent.name, tag.x, tag.y);
       });
     }
     requestAnimationFrame(animate);

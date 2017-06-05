@@ -30,7 +30,7 @@ $().ready(function() {
     this.getstate = function() {
       //return 0 to enable, -1 to disable icon access
       var files = this.files();
-      return (!this._disabled && (files.length == 1) && files[0].mime === 'application/json') ? 0 : -1;
+      return (!this._disabled && (files.length == 1) && ['application/json', 'model/vnd.collada+xml'].indexOf(files[0].mime) !== -1) ? 0 : -1;
     }
   }
 
