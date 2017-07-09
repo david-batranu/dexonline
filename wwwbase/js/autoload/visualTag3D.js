@@ -42,7 +42,10 @@ window.start3d = (function(){
     }(),
     objects: [],
     renderer: null,
-    controls: null
+    controls: null,
+
+    container_json: document.getElementById('jsondata'),
+    json: {}
   };
 
   var materials = {
@@ -103,7 +106,11 @@ window.start3d = (function(){
       };
     }
 
-    function tagFromPoint(point /* object coordinates */, cc /* canvas center */, resolution) {
+    function tagFromPoint(
+      point /* object coordinates */,
+      cc /* canvas center */,
+      resolution
+    ) {
       var pc = { // point center
         x: point.x + 1,
         y: point.y + 1
@@ -322,158 +329,159 @@ window.start3d = (function(){
       controls.enablePan = false;
       controls.update();
 
+      globals.controls = controls;
+
       // ambient light
       // var light = new THREE.AmbientLight(0xffffff);
       // globals.scene.add(light);
 
       gameLoop(config, globals, utils);
+      loadCallback(globals);
 
     });
   }
 
+  function prepareJSON(globals) {
+    var result = {
+      meshes: {},
+      json: {}
+    };
 
-//  function add_table_entry(name, elem) {
-//    var cell_name_exists = document.getElementById(name);
-//    if (cell_name_exists) {
-//      cell_name_exists.appendChild(elem);
-//    }
-//    else {
-//      var row = document.createElement('tr');
-//      var cell_name = document.createElement('td');
-//      var cell_assign = document.createElement('td');
-//      var cell_camera = document.createElement('td');
-//
-//      var assign_select = document.createElement('select');
-//      assign_select.setAttribute('name', 'mapping_' + name);
-//
-//      var elem_camera_input = document.createElement('input');
-//      elem_camera_input.setAttribute('type', 'hidden');
-//      elem_camera_input.setAttribute('id', 'camera_' + name);
-//      elem_camera_input.setAttribute('name', 'camera_' + name);
-//      elem_camera_input.setAttribute('value', encodeVector(camera.position));
-//
-//      function factory_camera_button(action, name, text) {
-//        var elem = document.createElement('button');
-//        elem.setAttribute('data-action', action);
-//        elem.setAttribute('data-mesh', name);
-//        elem.setAttribute('class', 'btn btn-sm btn-default');
-//        elem.textContent = text;
-//        return elem;
-//      }
-//
-//      elem_camera_save = factory_camera_button('save-camera', name, 'Salvează poziția camerei');
-//      elem_camera_restore = factory_camera_button('restore-camera', name, 'Aplică poziția camerei');
-//
-//      var tbody = document.getElementById('table-assign').getElementsByTagName('tbody')[0];
-//
-//      cell_name.appendChild(elem);
-//      cell_assign.appendChild(assign_select);
-//
-//      cell_camera.appendChild(elem_camera_input);
-//      cell_camera.appendChild(elem_camera_save);
-//      cell_camera.appendChild(elem_camera_restore);
-//
-//      row.appendChild(cell_name);
-//      row.appendChild(cell_assign);
-//      row.appendChild(cell_camera);
-//
-//      tbody.appendChild(row);
-//
-//      $(assign_select).select2({
-//        ajax: { url: wwwRoot + 'ajax/getEntries.php' },
-//        minimumInputLength: 1,
-//        placeholder: 'caută o intrare',
-//        width: '300px',
-//      }).change(console.log);
-//    }
-//
-//  }
-//
-//  function init_camera_save() {
-//    var buttons = [].slice.call(document.querySelectorAll('[data-action="save-camera"]'));
-//    buttons.forEach(function(button) {
-//      button.addEventListener('click', function(evt) {
-//        evt.preventDefault();
-//        var mesh = button.getAttribute('data-mesh');
-//        var target = document.getElementById('camera_' + mesh);
-//        target.setAttribute('value', encodeVector(camera.position));
-//      });
-//    });
-//  }
-//
-//  function init_camera_restore() {
-//    var buttons = [].slice.call(document.querySelectorAll('[data-action="restore-camera"]'));
-//    buttons.forEach(function(button) {
-//      button.addEventListener('click', function(evt) {
-//        evt.preventDefault();
-//        var mesh = button.getAttribute('data-mesh');
-//        var target = document.getElementById('camera_' + mesh);
-//        var saved = decodeVector(target.getAttribute('value'));
-//        camera.position.set(saved.x, saved.y, saved.z);
-//        controls.update();
-//      });
-//    });
-//  }
-//
-//  function init_default_cameras() {
-//    var inputs = [].slice.call(document.querySelectorAll('[id*="camera_"]'));
-//    var camera_position = encodeVector(camera.position);
-//    inputs.forEach(function(input){
-//      if(input.getAttribute('value') === '') {
-//        input.setAttribute('value', camera_position)
-//      }
-//    });
-//  }
-//
-//  function encodeVector(value) {
-//    return [value.x, value.y, value.z].join(',')
-//  }
-//
-//  function decodeVector(value) {
-//    var arr = value.split(',').map(parseFloat);
-//    return new THREE.Vector3(arr[0], arr[1], arr[2])
-//  }
-//
-//  init(function(){
-//    init_default_cameras();
-//    init_camera_save();
-//    init_camera_restore();
-//  });
+    var jsondata = globals.container_json.getAttribute('value');
+    result.json = JSON.parse(jsondata) || {};
 
-  init();
+    globals.objects.forEach(function(mesh){
+      var mesh_name = mesh.name || mesh.parent.name;
+      result.meshes[mesh_name] = mesh;
+
+      if (!result.json[mesh_name]) {
+       result.json[mesh_name] = {
+          label: '',
+          word: '',
+          camera: null
+        }
+      }
+
+    });
+
+    return result;
+  }
+
+  function renderFields(globals) {
+    var tbody = document
+      .getElementById('table-assign')
+      .getElementsByTagName('tbody')[0];
+
+    for (name in globals.json.json) {
+      createRowElement(globals, name, tbody);
+    }
+  }
+
+  function createRowElement(globals, name, tbody) {
+    var row = document.createElement('tr');
+    var cell_name = document.createElement('td');
+    var cell_assign = document.createElement('td');
+    var cell_camera = document.createElement('td');
+
+    var assign_select = document.createElement('select');
+    assign_select.setAttribute('data-mesh', name);
+
+
+    var mesh = globals.json.meshes[name];
+    cell_name.appendChild(createTagElement(name, mesh));
+    cell_assign.appendChild(assign_select);
+
+    createCameraButtons(name, globals).forEach(function(btn){
+      cell_camera.appendChild(btn);
+    });
+
+    row.appendChild(cell_name);
+    row.appendChild(cell_assign);
+    row.appendChild(cell_camera);
+
+    tbody.appendChild(row);
+
+    $(assign_select).select2({
+      ajax: { url: wwwRoot + 'ajax/getEntries.php' },
+      minimumInputLength: 1,
+      placeholder: 'caută o intrare',
+      width: '300px',
+    }).change(function(evt){
+      var mesh_name = evt.target.getAttribute('data-mesh');
+      globals.json.json[mesh_name].word = evt.target.value;
+      updateJSONData(globals);
+    });
+
+  }
+
+  function createTagElement(name, mesh) {
+    var tag = document.createElement('a');
+    tag.setAttribute('href', '#');
+    tag.textContent = name;
+    tag.addEventListener('click', function(evt){
+      evt.preventDefault();
+      if (mesh.material_bak) {
+        mesh.material = mesh.material_bak;
+        mesh.wireframe.visible = false;
+        delete mesh.material_bak;
+      }
+      else {
+        mesh.material_bak = mesh.material;
+        mesh.material = materials.highlight;
+        mesh.wireframe.visible = true;
+      }
+    });
+    return tag;
+  }
+
+  function createCameraButtons(name, globals) {
+
+    function factory_camera_button(text) {
+      var elem = document.createElement('button');
+      elem.setAttribute('class', 'btn btn-sm btn-default');
+      elem.textContent = text;
+      return elem;
+    }
+
+    elem_camera_save = factory_camera_button('Salvează poziția camerei');
+    elem_camera_restore = factory_camera_button('Aplică poziția camerei');
+
+    elem_camera_save.addEventListener('click', function(evt) {
+      evt.preventDefault();
+      globals.json.json[name].camera = encodeVector(globals.camera.position);
+      updateJSONData(globals);
+    })
+
+    elem_camera_restore.addEventListener('click', function(evt) {
+      evt.preventDefault();
+      var saved = decodeVector(globals.json.json[name].camera);
+      globals.camera.position.set(saved.x, saved.y, saved.z);
+      globals.controls.update();
+    })
+
+    return [
+      elem_camera_save,
+      elem_camera_restore
+    ]
+  }
+
+  function updateJSONData(globals) {
+    globals.container_json.value = JSON.stringify(globals.json.json);
+  }
+
+  function encodeVector(value) {
+    return [value.x, value.y, value.z].join(',')
+  }
+
+  function decodeVector(value) {
+    var arr = value.split(',').map(parseFloat);
+    return new THREE.Vector3(arr[0], arr[1], arr[2])
+  }
+
+  init(function(globals){
+    globals.json = prepareJSON(globals);
+    updateJSONData(globals);
+    renderFields(globals);
+  });
 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//           var tag = document.createElement('a');
-//           tag.setAttribute('href', '#');
-//           tag.textContent = child.name ? child.name : child.parent.name;
-//           tag.addEventListener('click', function(evt){
-//             evt.preventDefault();
-//             var obj = scene.getObjectById(child.id);
-//             if (obj.material_bak) {
-//               obj.material = obj.material_bak;
-//               obj.wireframe.visible = false;
-//               delete obj.material_bak;
-//             }
-//             else {
-//               obj.material_bak = obj.material;
-//               obj.material = materials.highlight;
-//               obj.wireframe.visible = true;
-//             }
-//           });
-//
-//           add_table_entry(child.name, tag);

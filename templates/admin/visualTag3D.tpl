@@ -58,6 +58,7 @@
         </div>
         <div class="panel-body">
           <form class="form-horizontal" method="post">
+          <textarea name="jsondata" id="jsondata"></textarea>
             <input type="hidden" name="id" value="{$visual->id}">
             <table id="table-assign" class="table table-hover">
               <thead>
@@ -68,27 +69,6 @@
                 <tr>
               </thead>
               <tbody>
-                {foreach $tags as $tag}
-                  <tr>
-                    <td id="{$tag->meshName}"></td>
-                    <td><select name="mapping_{$tag->meshName}">
-                      <option value="{$tag->entryId}" selected="selected">{$tag->getTitle()}</option>
-                    </select>
-                    <button class="btn btn-sm btn-danger" name="clearTagButton" value="{$tag->meshName}">
-                        <span class="glyphicon glyphicon-trash"></span>
-                    </button>
-                    </td>
-                    <td>
-                    <input type="hidden" id="camera_{$tag->meshName}" name="camera_{$tag->meshName}" value="{$tag->camera}" />
-                    <button class="btn btn-sm btn-default" data-action="save-camera" data-mesh="{$tag->meshName}">
-                        Salvează poziția camerei
-                    </button>
-                    <button class="btn btn-sm btn-default" data-action="restore-camera" data-mesh="{$tag->meshName}">
-                        Aplică poziția camerei
-                    </button>
-                    </td>
-                  </tr>
-                {/foreach}
               </tbody>
             </table>
 
