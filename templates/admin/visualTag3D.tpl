@@ -58,7 +58,7 @@
         </div>
         <div class="panel-body">
           <form class="form-horizontal" method="post">
-          <textarea name="jsondata" id="jsondata"></textarea>
+            <textarea name="jsondata" id="jsondata" class="hidden">{$jsondata}</textarea>
             <input type="hidden" name="id" value="{$visual->id}">
             <table id="table-assign" class="table table-hover">
               <thead>

@@ -3,59 +3,35 @@ require_once('../../phplib/Core.php');
 User::mustHave(User::PRIV_VISUAL);
 Util::assertNotMirror();
 
-$fileName = Request::get('fileName');
 $id = Request::get('id');
 $addTagButton = Request::has('addTagButton');
-$clearTagButton = Request::has('clearTagButton');
-
-// Tag the model specified by $fileName. Create a Visual object if one doesn't exist, then redirect to it.
-if ($fileName) {
-  $v = Visual3D::get_by_path($fileName);
-  if (!$v) {
-    $v = Visual3D::createFromFile($fileName);
-  }
-  Util::redirect("?id={$v->id}");
-}
 
 $v = Visual3D::get_by_id($id);
 
-function unwrap_mapping($arr, $split_on){
-  $result = [];
-  foreach($arr as $key => $value) {
-    $new_key = explode($split_on, $key)[1];
-    $result[$new_key] = $value;
-  }
-  return $result;
-}
+if ($addTagButton) {
+  $data = json_decode(Request::get('jsondata'));
+  foreach($data as $mesh_name => $mesh_data) {
+    $entry_id = $mesh_data->word->id;
 
-if($clearTagButton) {
-  $existing = Model::factory('VisualTag3D')
-    ->where('modelId', $v->id)
-    ->where('meshName', Request::get('clearTagButton'))
-    ->find_one();
-  if($existing){
-    $entry = Entry::get_by_id($existing->entryId);
-    $existing->delete();
-    Log::info("Deleted 3d tag {$existing->id} ({$existing->meshName}) to {$entry->id} ({$entry->description}) for model {$v->id} ({$v->path}).");
-  }
+    $camera_position = $mesh_data->camera;
 
-}
-else if ($addTagButton) {
-  $mapping = unwrap_mapping(Request::getStartsWith('mapping_'),  'mapping_');
-  $camera_positions = unwrap_mapping(Request::getStartsWith('camera_'),  'camera_');
-  foreach($mapping as $mesh_name => $entry_id) {
     $existing = Model::factory('VisualTag3D')
         ->where('modelId', $v->id)
         ->where('meshName', $mesh_name)
         ->find_one();
-    if($existing) {
+
+    if ($existing && !$entry_id) {
+      $existing->delete();
+      Log::info("Deleted 3d tag {$existing->id} ({$existing->meshName}) for model {$v->id} ({$v->path}).");
+    }
+    elseif ($existing && $entry_id) {
       $changed = false;
       if($existing->entryId != $entry_id) {
         $existing->entryId = $entry_id;
         $changed = true;
       }
-      if($existing->camera != $camera_positions[$mesh_name]) {
-        $existing->camera = $camera_positions[$mesh_name];
+      if($existing->camera != $camera_position) {
+        $existing->camera = $camera_position;
         $changed = true;
       }
       if($changed) {
@@ -64,12 +40,12 @@ else if ($addTagButton) {
         Log::info("Edited 3d tag {$existing->id} ({$existing->meshName}) to {$entry->id} ({$entry->description}) for model {$v->id} ({$v->path}).");
       }
     }
-    else {
+    elseif (!$existing && $entry_id) {
       $vt = Model::factory('VisualTag3D')->create();
       $vt->modelId = $v->id;
       $vt->meshName = $mesh_name;
       $vt->entryId = $entry_id;
-      $vt->camera = $camera_positions[$mesh_name];
+      $vt->camera = $camera_position;
       $vt->save();
 
       $entry = Entry::get_by_id($vt->entryId);
@@ -80,8 +56,22 @@ else if ($addTagButton) {
   Util::redirect("?id={$v->id}");
 }
 
+$tags = VisualTag3D::get_all_by_modelId($v->id);
+$tags_json = [];
+
+foreach($tags as $tag) {
+  $tags_json[$tag->meshName] = [
+    "label" => "",
+    "camera" => $tag->camera,
+    "word" => [
+      "id" => $tag->entryId,
+      "label" => $tag->getTitle(),
+    ]
+  ];
+}
+
 SmartyWrap::assign('visual', $v);
-SmartyWrap::assign('tags', VisualTag3D::get_all_by_modelId($v->id));
+SmartyWrap::assign('jsondata', $tags_json ? json_encode($tags_json) : "{}");
 
 SmartyWrap::addCss('jqueryui', 'admin');
 SmartyWrap::addJs('jqueryui', 'select2Dev');

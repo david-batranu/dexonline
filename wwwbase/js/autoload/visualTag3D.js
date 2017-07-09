@@ -347,7 +347,7 @@ window.start3d = (function(){
       json: {}
     };
 
-    var jsondata = globals.container_json.getAttribute('value');
+    var jsondata = globals.container_json.value;
     result.json = JSON.parse(jsondata) || {};
 
     globals.objects.forEach(function(mesh){
@@ -357,8 +357,11 @@ window.start3d = (function(){
       if (!result.json[mesh_name]) {
        result.json[mesh_name] = {
           label: '',
-          word: '',
-          camera: null
+          word: {
+            id: null,
+            label: null
+          },
+          camera: ''
         }
       }
 
@@ -384,12 +387,27 @@ window.start3d = (function(){
     var cell_camera = document.createElement('td');
 
     var assign_select = document.createElement('select');
-    assign_select.setAttribute('data-mesh', name);
+    var assign_word = globals.json.json[name].word;
+    if (assign_word.id) {
+      var option = document.createElement('option');
+      option.value = assign_word.id;
+      option.textContent = assign_word.label;
+      assign_select.appendChild(option);
+    }
 
+    var button_clear = document.createElement('button');
+    button_clear.className = 'glyphicon glyphicon-trash btn btn-sm btn-danger';
+
+    button_clear.addEventListener('click', function(evt) {
+      evt.preventDefault();
+      $(assign_select).val(null).trigger('change');
+      updateJSONData(globals);
+    });
 
     var mesh = globals.json.meshes[name];
     cell_name.appendChild(createTagElement(name, mesh));
     cell_assign.appendChild(assign_select);
+    cell_assign.appendChild(button_clear);
 
     createCameraButtons(name, globals).forEach(function(btn){
       cell_camera.appendChild(btn);
@@ -407,8 +425,9 @@ window.start3d = (function(){
       placeholder: 'caută o intrare',
       width: '300px',
     }).change(function(evt){
-      var mesh_name = evt.target.getAttribute('data-mesh');
-      globals.json.json[mesh_name].word = evt.target.value;
+      var data = $(evt.target).select2('data')[0] || {id: '', text: ''};
+      globals.json.json[name].word.id = data.id;
+      globals.json.json[name].word.label = data.text;
       updateJSONData(globals);
     });
 
