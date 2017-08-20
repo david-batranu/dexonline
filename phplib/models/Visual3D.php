@@ -30,7 +30,7 @@ class Visual3D extends BaseObject implements DatedObject {
   }
 
   // Loads all Visuals that are associated with one of the entries,
-  // either directly or through a VisualTag.
+  // through a VisualTag.
   static function loadAllForEntries($entries) {
     if (empty($entries)) {
       return [];
@@ -39,16 +39,10 @@ class Visual3D extends BaseObject implements DatedObject {
     $map = [];
     $entryIds = Util::objectProperty($entries, 'id');
 
-    $vs = Model::factory('Visual3D')
-        ->where_in('entryId', $entryIds)
-        ->find_many();
-    foreach ($vs as $v) {
-      $map[$v->id] = $v;
-    }
-
     $vts = Model::factory('VisualTag3D')
          ->where_in('entryId', $entryIds)
          ->find_many();
+
     foreach ($vts as $vt) {
       $v = Visual3D::get_by_id($vt->modelId);
       $map[$v->id] = $v;

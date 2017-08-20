@@ -3,12 +3,11 @@ $(function() {
   function init() {
     var selects = [].slice.call(document.getElementsByTagName('select'));
     selects.forEach(function(select){
-      var value = select.getElementsByTagName('option')[0].getAttribute('value');
       $(select).select2({
         ajax: { url: wwwRoot + 'ajax/getEntries.php' },
         minimumInputLength: 1,
         placeholder: 'caută o intrare',
-        width: '300px',
+        width: '300px'
       }).change(console.log);
     });
   }
@@ -21,9 +20,13 @@ window.start3d = (function(){
 
   var config = {
     resolution: {
-      w: 800,
-      h: 600
+      w: 896,
+      h: 504
     },
+    thumb: {
+      w: 144,
+      h: 81
+    }
   };
 
   var globals = {
@@ -54,7 +57,7 @@ window.start3d = (function(){
     }),
     wireframe: new THREE.LineBasicMaterial({
       color: 0xffffff,
-      linewidth: 1,
+      linewidth: 1
     })
   };
 
@@ -68,7 +71,7 @@ window.start3d = (function(){
         'mouseout',
         'mouseover',
         'mouseup',
-        'scroll',
+        'scroll'
       ],
       trigger: MouseEvent
     },
@@ -79,10 +82,9 @@ window.start3d = (function(){
   ];
 
 
-  var RESOLUTION = config.resolution;
   var UI = globals.ui;
 
-  if (!Detector.webgl) { Detector.addGetWebGLMessage(); };
+  if (!Detector.webgl) { Detector.addGetWebGLMessage(); }
 
   var utils = (function(){
     function projectToScreen(obj, camera, resolution){
@@ -120,7 +122,7 @@ window.start3d = (function(){
         a: pc.y - cc.y,
         b: cc.x - pc.x,
         c: cc.y * (pc.x - cc.x) - cc.x * (pc.y - cc.y)
-      } // line through cc and pc
+      }; // line through cc and pc
 
 
       var inters = [];
@@ -157,28 +159,27 @@ window.start3d = (function(){
       }
 
       function dist_sq(p1, p2) {
-        return (p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2;
+        return Math.pow((p2.x - p1.x), 2) + Math.pow((p2.y - p1.y), 2);
       }
 
       var min_inter = inters.reduce(function(acc, p) {
         if (!acc) {
           return p
-        };
+        }
 
         if (dist_sq(pc, acc) < dist_sq(pc, p)) {
           return acc
-        };
+        }
 
         return p;
       }, null);
 
-      var tag = {
+      return {
         x: (min_inter.x + pc.x) / 2,
         y: (min_inter.y + pc.y) / 2
-      }
+      }; // tag
 
-      return tag;
-    };
+    }
 
     function assetLoader(url, callback) {
       var manager = new THREE.LoadingManager();
@@ -190,14 +191,14 @@ window.start3d = (function(){
       var onProgress = function(xhr) {
         if (xhr.lengthComputable) {
           var percentComplete = xhr.loaded / xhr.total * 100;
-          console.log(Math.round(percentComplete, 2) + '% downloaded');
+          console.log(Math.round(percentComplete) + '% downloaded');
         }
-      }
+      };
 
       var loader = new THREE.ColladaLoader(manager);
       loader.load(url, callback, onProgress, onError)
 
-    };
+    }
 
     function wireframeFromGeometry(geometry, wireframeMaterial) {
       var wireframeGeometry = new THREE.EdgesGeometry(geometry);
@@ -216,7 +217,7 @@ window.start3d = (function(){
           result.push(obj);
         }
       });
-    };
+    }
 
     function renderTag(center, tag, name, ui) {
       ui.beginPath();
@@ -226,14 +227,29 @@ window.start3d = (function(){
       ui.stroke();
       ui.font = "12px Arial";
       ui.fillText(name, tag.x, tag.y);
-    };
+    }
 
-    function setupRenderer(resolution, container) {
-      renderer = new THREE.WebGLRenderer();
+    function setupRenderer(resolution) {
+      var renderer = new THREE.WebGLRenderer({
+        preserveDrawingBuffer: true
+      });
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(RESOLUTION.w, RESOLUTION.h);
+      renderer.setSize(resolution.w, resolution.h);
       renderer.setClearColor(0xededed);
       return renderer;
+    }
+
+    function captureThumbnail(config, canvas, callback) {
+      var img = new Image(config.thumb.w, config.thumb.h);
+      img.onload = function() {
+        var thumb = document.createElement('canvas');
+        thumb.width = config.thumb.w;
+        thumb.height = config.thumb.h;
+
+        thumb.getContext('2d').drawImage(img, 0, 0, config.thumb.w, config.thumb.h);
+        callback(thumb.toDataURL('image/png'));
+      };
+      img.src = canvas.toDataURL('image/png');
     }
 
     return {
@@ -243,7 +259,8 @@ window.start3d = (function(){
       wireframeFromGeometry: wireframeFromGeometry,
       huntForMeshes: huntForMeshes,
       renderTag: renderTag,
-      setupRenderer: setupRenderer
+      setupRenderer: setupRenderer,
+      captureThumbnail: captureThumbnail
     }
 
   })();
@@ -281,7 +298,7 @@ window.start3d = (function(){
         };
         if (globals.objects.length > 0 && globals.ui && utils.projectToScreen) {
           var centers = globals.objects.map(projectToScreen);
-          centers.forEach(function(center, idx) {
+          centers.forEach(function(center) {
             var tag = utils.tagFromPoint(center, globals.center, config.resolution);
             var name = center.obj.name ? center.obj.name : center.obj.parent.name;
             utils.renderTag(center, tag, name, globals.ui);
@@ -324,7 +341,7 @@ window.start3d = (function(){
       // setup controls
       globals.camera.position.set(0, 0, 20);
 
-      controls = new THREE.OrbitControls(globals.camera, globals.renderer.domElement);
+      var controls = new THREE.OrbitControls(globals.camera, globals.renderer.domElement);
       controls.target.copy(object.position);
       controls.enablePan = false;
       controls.update();
@@ -340,6 +357,8 @@ window.start3d = (function(){
 
     });
   }
+
+
 
   function prepareJSON(globals) {
     var result = {
@@ -361,7 +380,8 @@ window.start3d = (function(){
             id: null,
             label: null
           },
-          camera: ''
+          camera: '',
+          thumb: ''
         }
       }
 
@@ -375,7 +395,7 @@ window.start3d = (function(){
       .getElementById('table-assign')
       .getElementsByTagName('tbody')[0];
 
-    for (name in globals.json.json) {
+    for (var name in globals.json.json) {
       createRowElement(globals, name, tbody);
     }
   }
@@ -409,9 +429,10 @@ window.start3d = (function(){
     cell_assign.appendChild(assign_select);
     cell_assign.appendChild(button_clear);
 
-    createCameraButtons(name, globals).forEach(function(btn){
-      cell_camera.appendChild(btn);
-    });
+    createCameraButtons(name, globals, config)
+      .forEach(function(btn){
+        cell_camera.appendChild(btn);
+      });
 
     row.appendChild(cell_name);
     row.appendChild(cell_assign);
@@ -423,7 +444,7 @@ window.start3d = (function(){
       ajax: { url: wwwRoot + 'ajax/getEntries.php' },
       minimumInputLength: 1,
       placeholder: 'caută o intrare',
-      width: '300px',
+      width: '300px'
     }).change(function(evt){
       var data = $(evt.target).select2('data')[0] || {id: '', text: ''};
       globals.json.json[name].word.id = data.id;
@@ -453,7 +474,7 @@ window.start3d = (function(){
     return tag;
   }
 
-  function createCameraButtons(name, globals) {
+  function createCameraButtons(name, globals, config) {
 
     function factory_camera_button(text) {
       var elem = document.createElement('button');
@@ -462,21 +483,24 @@ window.start3d = (function(){
       return elem;
     }
 
-    elem_camera_save = factory_camera_button('Salvează poziția camerei');
-    elem_camera_restore = factory_camera_button('Aplică poziția camerei');
+    var elem_camera_save = factory_camera_button('Salvează poziția camerei');
+    var elem_camera_restore = factory_camera_button('Aplică poziția camerei');
 
     elem_camera_save.addEventListener('click', function(evt) {
       evt.preventDefault();
       globals.json.json[name].camera = encodeVector(globals.camera.position);
-      updateJSONData(globals);
-    })
+      utils.captureThumbnail(config, globals.renderer.domElement, function(dataURL) {
+        globals.json.json[name].thumb = dataURL;
+        updateJSONData(globals);
+      });
+    });
 
     elem_camera_restore.addEventListener('click', function(evt) {
       evt.preventDefault();
       var saved = decodeVector(globals.json.json[name].camera);
       globals.camera.position.set(saved.x, saved.y, saved.z);
       globals.controls.update();
-    })
+    });
 
     return [
       elem_camera_save,
@@ -501,6 +525,11 @@ window.start3d = (function(){
     globals.json = prepareJSON(globals);
     updateJSONData(globals);
     renderFields(globals);
+    window.captureThumbnail = function() {
+      return utils.captureThumbnail(config, globals.renderer.domElement, function(dataURL){
+        console.log(dataURL);
+      });
+    };
   });
 
 });

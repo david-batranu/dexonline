@@ -3,10 +3,21 @@ require_once('../../phplib/Core.php');
 User::mustHave(User::PRIV_VISUAL);
 Util::assertNotMirror();
 
+$fileName = Request::get('fileName');
 $id = Request::get('id');
 $addTagButton = Request::has('addTagButton');
 
+// Create a Visual3D object if one doesn't exist, then redirect to it.
+if ($fileName) {
+    $v = Visual3D::get_by_path($fileName);
+    if (!$v) {
+        $v = Visual3D::createFromFile($fileName);
+    }
+    Util::redirect("?id={$v->id}");
+}
+
 $v = Visual3D::get_by_id($id);
+
 
 if ($addTagButton) {
   $data = json_decode(Request::get('jsondata'));
@@ -14,6 +25,7 @@ if ($addTagButton) {
     $entry_id = $mesh_data->word->id;
 
     $camera_position = $mesh_data->camera;
+    $thumbnail = $mesh_data->thumb ? $mesh_data->thumb.explode(',') : null;
 
     $existing = Model::factory('VisualTag3D')
         ->where('modelId', $v->id)
@@ -22,6 +34,7 @@ if ($addTagButton) {
 
     if ($existing && !$entry_id) {
       $existing->delete();
+      // TODO: Delete thumbnail!
       Log::info("Deleted 3d tag {$existing->id} ({$existing->meshName}) for model {$v->id} ({$v->path}).");
     }
     elseif ($existing && $entry_id) {
@@ -36,6 +49,9 @@ if ($addTagButton) {
       }
       if($changed) {
         $existing->save();
+        if ($thumbnail) {
+          $existing->thumbFromBase64($thumbnail);
+        }
         $entry = Entry::get_by_id($existing->entryId);
         Log::info("Edited 3d tag {$existing->id} ({$existing->meshName}) to {$entry->id} ({$entry->description}) for model {$v->id} ({$v->path}).");
       }
@@ -47,6 +63,10 @@ if ($addTagButton) {
       $vt->entryId = $entry_id;
       $vt->camera = $camera_position;
       $vt->save();
+
+      if ($thumbnail) {
+          $vt->thumbFromBase64($thumbnail);
+      }
 
       $entry = Entry::get_by_id($vt->entryId);
       error_log($entry->id);
@@ -66,7 +86,8 @@ foreach($tags as $tag) {
     "word" => [
       "id" => $tag->entryId,
       "label" => $tag->getTitle(),
-    ]
+    ],
+    "thumbnail"=> "",
   ];
 }
 

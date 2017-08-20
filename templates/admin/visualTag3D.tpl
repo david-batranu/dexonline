@@ -15,12 +15,10 @@
     #preview-3d {
       position: absolute;
       z-index: 8;
-      border: 1px solid red;
     }
 
     #overlay-2d {
       position: absolute;
-      border: 1px solid black;
       z-index: 10;
     }
   </style>
@@ -46,7 +44,7 @@
                 id="preview-3d" style="text-align: center"
                 data-src="{$cfg.static.url}img/visual/{$visual->path}"></div>
               <div id="overlay-2d">
-                <canvas width="800" height="600"></canvas>
+                <canvas width="896" height="504"></canvas>
               </div>
           </div>
         </div>

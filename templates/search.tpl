@@ -151,6 +151,7 @@
       {elseif $searchType == $smarty.const.SEARCH_INFLECTED}
 
         {include "search/gallery.tpl"}
+        {include "search/3dgallery.tpl"}
 
         {if count($entries) > 1}
           <h3>{$entries|count} intrări</h3>

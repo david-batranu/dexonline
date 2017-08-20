@@ -413,6 +413,13 @@ if (count($images)) {
   SmartyWrap::addJs('gallery', 'jcanvas');
 }
 
+// 3d models
+$models = empty($entries) ? [] : VisualTag3D::loadAllForEntries($entries);
+SmartyWrap::assign('models', $models);
+if (count($models)) {
+    // add js, css
+}
+
 // We cannot show the paradigm tab by default if there isn't one to show.
 $showParadigm = ($showParadigm || Session::userPrefers(Preferences::SHOW_PARADIGM))
   && $SEARCH_PARAMS[$searchType]['paradigm'];
