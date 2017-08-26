@@ -7,6 +7,7 @@ $fileName = Request::get('fileName');
 $id = Request::get('id');
 $addTagButton = Request::has('addTagButton');
 
+
 // Create a Visual3D object if one doesn't exist, then redirect to it.
 if ($fileName) {
     $v = Visual3D::get_by_path($fileName);
@@ -25,7 +26,7 @@ if ($addTagButton) {
     $entry_id = $mesh_data->word->id;
 
     $camera_position = $mesh_data->camera;
-    $thumbnail = $mesh_data->thumb ? $mesh_data->thumb.explode(',') : null;
+    $thumbnail = $mesh_data->thumb ? explode(',', $mesh_data->thumb)[1] : null;
 
     $existing = Model::factory('VisualTag3D')
         ->where('modelId', $v->id)
@@ -87,7 +88,7 @@ foreach($tags as $tag) {
       "id" => $tag->entryId,
       "label" => $tag->getTitle(),
     ],
-    "thumbnail"=> "",
+    "thumb"=> "",
   ];
 }
 

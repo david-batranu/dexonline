@@ -10,7 +10,7 @@
              href="#idk"
              data-visual-id="{$i->id}"
              title="Imagine: {$i->getTitle()}">
-            {$i->getTitle()}
+              <img src="{$i->getThumbUrl()}" alt="imagine pentru {$i->getTitle()}">
           </a>
         {/foreach}
       </div>
