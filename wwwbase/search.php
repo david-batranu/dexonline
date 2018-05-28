@@ -48,7 +48,8 @@ $cuv = Request::getWithApostrophes('cuv');
 $entryId = Request::get('entryId');
 $lexemeId = Request::get('lexemeId');
 $defId = Request::get('defId');
-$sourceUrlName = Request::get('source');
+$_sourceUrlNames = Request::getArray('source');
+$sourceUrlNames = is_array($_sourceUrlNames) ? $_sourceUrlNames : explode('-', $_sourceUrlNames);
 $text = Request::has('text');
 $showParadigm = Request::get('showParadigm');
 $format = checkFormat();
@@ -63,7 +64,7 @@ if ($cuv && !$redirect) {
   $cuv = Str::cleanupQuery($cuv);
 }
 
-Request::redirectToFriendlyUrl($cuv, $entryId, $lexemeId, $sourceUrlName, $text, $showParadigm,
+Request::redirectToFriendlyUrl($cuv, $entryId, $lexemeId, $sourceUrlNames, $text, $showParadigm,
                                $format, $all);
 
 $paradigmLink = $_SERVER['REQUEST_URI'] . ($showParadigm ? '' : '/paradigma');
@@ -74,8 +75,8 @@ $hasRegexp = FALSE;
 $isAllDigits = FALSE;
 $all = $all || $showParadigm;
 
-$source = $sourceUrlName ? Source::get_by_urlName($sourceUrlName) : null;
-$sourceId = $source ? $source->id : null;
+$source = array_map('Source::get_by_urlName', $sourceUrlNames);
+$sourceIds = Util::objectProperty($source, 'id');
 
 if ($cuv) {
   SmartyWrap::assign('cuv', $cuv);
@@ -135,7 +136,7 @@ if ($text) {
     $extra['fullTextLock'] = true;
   } else {
     $words = preg_split('/ +/', $cuv);
-    list($defIds, $stopWords, $adult) = Definition::searchFullText($words, $hasDiacritics, $sourceId);
+    list($defIds, $stopWords, $adult) = Definition::searchFullText($words, $hasDiacritics, $sourceIds);
 
     // enforce the limit before even loading the definitions to save memory
     // TODO: this can lead to a bug as follows: we load 100 definitions and filter them down
@@ -177,8 +178,8 @@ if ($entryId) {
 // Count all the results, but load at most 1,000
 if ($hasRegexp) {
   $searchType = SEARCH_REGEXP;
-  $extra['numLexemes'] = Lexeme::searchRegexp($cuv, $hasDiacritics, $sourceId, true);
-  $lexemes = Lexeme::searchRegexp($cuv, $hasDiacritics, $sourceId);
+  $extra['numLexemes'] = Lexeme::searchRegexp($cuv, $hasDiacritics, $sourceIds, true);
+  $lexemes = Lexeme::searchRegexp($cuv, $hasDiacritics, $sourceIds);
 }
 
 // If no search type requested so far, then normal search
@@ -187,8 +188,8 @@ if ($searchType == SEARCH_INFLECTED) {
 
   // successful search
   if (count($entries)) {
-    $definitions = Definition::loadForEntries($entries, $sourceId, $cuv);
-    Plugin::notify('searchInflected', $definitions, $sourceId);
+    $definitions = Definition::loadForEntries($entries, $sourceIds, $cuv);
+    Plugin::notify('searchInflected', $definitions, $sourceIds);
     SmartyWrap::assign('wikiArticles', WikiArticle::loadForEntries($entries));
 
     // Add a warning if this word is in WotD
@@ -211,7 +212,7 @@ if ($searchType == SEARCH_INFLECTED) {
     $extra['ignoredWords'] = array_slice($words, 5);
     $words = array_slice($words, 0, 5);
     $definitions = Definition::searchMultipleWords(
-      $words, $hasDiacritics, $sourceId);
+      $words, $hasDiacritics, $sourceIds);
   }
 
   // fallback to approximate search
@@ -244,7 +245,7 @@ if ($searchType == SEARCH_INFLECTED) {
                                $sourcePart,
                                $l->formNoAccent,
                                $format['tpl_path']));
-      } else if (!$sourceId) {
+      } else if (!$sourceIds) {
         // if the source is set, then the lesser evil is to just leave the search word unaltered
         Util::redirect(sprintf('%sintrare/%s/%s%s',
                                Core::getWwwRoot(),
@@ -279,7 +280,7 @@ if (empty($entries) && empty($lexemes) && empty($results)) {
 
 // Collect meaning trees
 // only display trees when no source is selected
-if ($SEARCH_PARAMS[$searchType]['trees'] && !$sourceId) {
+if ($SEARCH_PARAMS[$searchType]['trees'] && !$sourceIds) {
   $statuses = [Entry::STRUCT_STATUS_DONE, Entry::STRUCT_STATUS_UNDER_REVIEW];
   foreach ($entries as $e) {
     if (in_array($e->structStatus, $statuses)) {
@@ -398,7 +399,7 @@ SmartyWrap::assign('extra', $extra);
 SmartyWrap::assign('text', $text);
 SmartyWrap::assign('searchType', $searchType);
 SmartyWrap::assign('searchParams', $SEARCH_PARAMS[$searchType]);
-SmartyWrap::assign('sourceId', $sourceId);
+SmartyWrap::assign('sourceIds', $sourceIds);
 SmartyWrap::assign('showParadigm', $showParadigm);
 SmartyWrap::assign('locParadigm', Session::userPrefers(Preferences::LOC_PARADIGM));
 SmartyWrap::assign('paradigmLink', $paradigmLink);
@@ -406,7 +407,7 @@ SmartyWrap::assign('allDefinitions', $all);
 SmartyWrap::assign('showWotd', $showWotd);
 SmartyWrap::assign('adult', $adult);
 SmartyWrap::assign('pageType', 'search');
-if ($text || $sourceId) {
+if ($text || $sourceIds) {
   // must show the advanced search menu regardless of preference
   SmartyWrap::assign('advancedSearch', true);
 }

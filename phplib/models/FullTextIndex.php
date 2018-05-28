@@ -3,17 +3,17 @@
 class FullTextIndex extends BaseObject {
   public static $_table = 'FullTextIndex';
 
-  static function loadDefinitionIdsForLexemes($lexemeIds, $sourceId) {
+  static function loadDefinitionIdsForLexemes($lexemeIds, $sourceIds) {
     if (empty($lexemeIds)) {
       return [];
     }
     $lexemeString = implode(',', $lexemeIds);
-    if ($sourceId) {
+    if ($sourceIds) {
       $query = "select distinct definitionId " .
         "from FullTextIndex F " .
         "join Definition D on D.id = F.definitionId " .
         "where lexemeId in ($lexemeString) " .
-        "and D.sourceId = $sourceId " .
+        "and D.sourceId in ($sourceIds) " .
         "order by definitionId";
     } else {
       $query = "select distinct definitionId " .

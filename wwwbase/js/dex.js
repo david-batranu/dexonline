@@ -120,16 +120,23 @@ function loadAjaxContent(url, elid) {
 }
 
 function searchSubmit() {
+  var frm = document.frm;
+  var cuv = frm.cuv.value;
+
   // Avoid server hit on empty query
-  if (!document.frm.cuv.value) {
+  if (!cuv) {
     return false;
   }
 
   // Friendly redirect
-  action = document.frm.text.checked ? 'text' : 'definitie';
-  source = document.frm.source.value;
-  sourcePart = source ? '-' + source : '';
-  window.location = wwwRoot + action + sourcePart + '/' + encodeURIComponent(document.frm.cuv.value);
+  var action = frm.text.checked ? 'text' : 'definitie';
+  var source = frm['source[]'];
+  var selected = [].slice.call(source.options).filter(function(opt) { return opt.selected });
+  var value = selected.map(function(opt) {return opt.value}).join('-');
+
+  var sourcePart = value ? '-' + value : '';
+  window.location = wwwRoot + action + sourcePart + '/' + encodeURIComponent(cuv);
+
   return false;
 }
 

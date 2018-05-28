@@ -60,10 +60,10 @@ class Spoof extends Plugin {
     }
   }
 
-  function searchInflected(&$definitions, $sourceId) {
+  function searchInflected(&$definitions, $sourceIds) {
     if ($this->spoofedQuery) {
       $entries = Entry::searchInflectedForms($this->spoofedQuery, $this->hasDiacritics);
-      $definitions = Definition::loadForEntries($entries, $sourceId, $this->spoofedQuery);
+      $definitions = Definition::loadForEntries($entries, $sourceIds, $this->spoofedQuery);
       $this->spoofDefinitions($definitions);
     }
   }

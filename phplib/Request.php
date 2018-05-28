@@ -121,7 +121,7 @@ class Request {
    * Links of the old form (search.php?...) can only come via the search form and
    * should not contain lexemeId / definitionId.
    */
-  static function redirectToFriendlyUrl($cuv, $entryId, $lexemeId, $sourceUrlName, $text,
+  static function redirectToFriendlyUrl($cuv, $entryId, $lexemeId, $sourceUrlNames, $text,
                                         $showParadigm, $format, $all) {
     if (strpos($_SERVER['REQUEST_URI'], '/search.php?') === false) {
       return;    // The url is already friendly.
@@ -132,9 +132,10 @@ class Request {
     }
 
     $cuv = urlencode($cuv);
-    $sourceUrlName = urlencode($sourceUrlName);
+    $sourceUrlNames = array_map(urlencode, $sourceUrlNames);
 
-    $sourcePart = $sourceUrlName ? "-{$sourceUrlName}" : '';
+    $_sourcePart = implode('-', $sourceUrlNames);
+    $sourcePart = $_sourcePart ? '-' . $_sourcePart : '';
     $paradigmPart = $showParadigm ? '/paradigma' : '';
     $allPart = ($all && !$showParadigm) ? '/expandat' : '';
 

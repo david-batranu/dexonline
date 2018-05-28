@@ -187,11 +187,11 @@ class Lexeme extends BaseObject implements DatedObject {
     return NGram::searchNGram($cuv);
   }
 
-  static function getRegexpQuery($regexp, $hasDiacritics, $sourceId) {
+  static function getRegexpQuery($regexp, $hasDiacritics, $sourceIds) {
     $mysqlRegexp = Str::dexRegexpToMysqlRegexp($regexp);
     $field = $hasDiacritics ? 'formNoAccent' : 'formUtf8General';
 
-    if ($sourceId) {
+    if ($sourceIds) {
       // Suppress warnings from idiorm's log query function, which uses vsprintf,
       // which trips on extra % signs.
       return @Model::factory('Lexeme')
@@ -200,7 +200,7 @@ class Lexeme extends BaseObject implements DatedObject {
         ->join('EntryDefinition', ['el.entryId', '=', 'ed.entryId'], 'ed')
         ->join('Definition', ['ed.definitionId', '=', 'd.id'], 'd')
         ->where_raw("$field $mysqlRegexp")
-        ->where('d.sourceId', $sourceId);
+        ->where_in('d.sourceId', $sourceIds);
     } else {
       // even where there is no sourceId, make sure the lexeme has associated entries
       // (fragments don't)
@@ -211,9 +211,9 @@ class Lexeme extends BaseObject implements DatedObject {
     }
   }
 
-  static function searchRegexp($regexp, $hasDiacritics, $sourceId, $count = false) {
+  static function searchRegexp($regexp, $hasDiacritics, $sourceIds, $count = false) {
     try {
-      $q = self::getRegexpQuery($regexp, $hasDiacritics, $sourceId);
+      $q = self::getRegexpQuery($regexp, $hasDiacritics, $sourceIds);
       if ($count) {
         $result = $q
                 ->select_expr('count(distinct l.id)', 'count')

@@ -121,7 +121,7 @@
             common=$smarty.capture.common}
         </h3>
 
-        {if !count($lexemes) && $sourceId}
+        {if !count($lexemes) && $sourceIds}
           {include "search/extendToAllSources.tpl"}
         {/if}
 
@@ -151,7 +151,7 @@
               common=$smarty.capture.common}
           </h3>
 
-          {if !count($results) && count($entries) && $sourceId}
+          {if !count($results) && count($entries) && $sourceIds}
             {include "search/extendToAllSources.tpl"}
           {/if}
         {/if}

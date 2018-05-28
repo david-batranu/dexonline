@@ -39,7 +39,7 @@
       <div class="row" id="advSearch" {if !$advancedSearch}style="display: none"{/if}>
 
         <div class="col-md-6">
-          {include "bits/sourceDropDown.tpl" urlName=1}
+          {include "bits/sourceDropDown.tpl" urlName=1 multiple=true}
         </div>
 
         <div class="checkbox col-md-6">

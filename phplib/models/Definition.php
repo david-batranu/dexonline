@@ -162,7 +162,7 @@ class Definition extends BaseObject implements DatedObject {
       ->count();
   }
 
-  static function loadForEntries(&$entries, $sourceId, $preferredWord) {
+  static function loadForEntries(&$entries, $sourceIds, $preferredWord) {
     if (!count($entries)) {
       return [];
     }
@@ -178,8 +178,8 @@ class Definition extends BaseObject implements DatedObject {
       ->join('Source', ['d.sourceId', '=', 's.id'], 's')
       ->where_in('ed.entryId', $entryIds)
       ->where_in('d.status', [self::ST_ACTIVE, self::ST_HIDDEN]);
-    if ($sourceId) {
-      $query = $query->where('s.id', $sourceId);
+    if ($sourceIds) {
+      $query = $query->where_in('s.id', $sourceIds);
     }
     $ids = $query
       ->order_by_desc('s.type')
@@ -215,7 +215,7 @@ class Definition extends BaseObject implements DatedObject {
   // * an array matching definition IDs
   // * an array of stop words
   // * a boolean indicating whether any words are adult
-  static function searchFullText(&$words, $hasDiacritics, $sourceId) {
+  static function searchFullText(&$words, $hasDiacritics, $sourceIds) {
     $field = $hasDiacritics ? 'formNoAccent' : 'formUtf8General';
     $intersection = null;
     $stopWords = [];
@@ -239,7 +239,7 @@ class Definition extends BaseObject implements DatedObject {
         $lexemeMap[] = $lexemeIds;
 
         // Get the definition IDs for all lexemes
-        $defIds = FullTextIndex::loadDefinitionIdsForLexemes($lexemeIds, $sourceId);
+        $defIds = FullTextIndex::loadDefinitionIdsForLexemes($lexemeIds, $sourceIds);
 
         // see if any entries for these lexemes are adult
         if (!empty($lexemeIds)) {
@@ -335,12 +335,12 @@ class Definition extends BaseObject implements DatedObject {
   }
 
   // Return definitions that are associated with at least two of the lexemes
-  static function searchMultipleWords($words, $hasDiacritics, $sourceId) {
+  static function searchMultipleWords($words, $hasDiacritics, $sourceIds) {
     $defCounts = [];
     foreach ($words as $word) {
       $entries = Entry::searchInflectedForms($word, $hasDiacritics);
       if (count($entries)) {
-        $definitions = self::loadForEntries($entries, $sourceId, $word);
+        $definitions = self::loadForEntries($entries, $sourceIds, $word);
         foreach ($definitions as $def) {
           $defCounts[$def->id] = array_key_exists($def->id, $defCounts) ? $defCounts[$def->id] + 1 : 1;
         }

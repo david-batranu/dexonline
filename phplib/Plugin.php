@@ -67,6 +67,6 @@ abstract class Plugin {
   }
 
   /* called after a normal (inflected form) search, once the entry and definitions are ready */
-  function searchInflected(&$definitions, $sourceId) {
+  function searchInflected(&$definitions, $sourceIds) {
   }
 }
