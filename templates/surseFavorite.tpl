@@ -10,7 +10,7 @@
     {if $selections}
       {foreach $selections as $sel}
         <dl>
-          <dt>Denumire</dt>
+          <dt><label><input title="Șterge?" type="checkbox" name="toDelete[]" value="{$sel->id}"/>Denumire</label></dt>
           <dd>{$sel->name}</dd>
           <dt>Dicționare</dt>
           <dd>
@@ -21,6 +21,7 @@
             </ul>
           </dd>
         </dl>
+
       {/foreach}
     {else}
       <p>Nu ai surse definite.</p>
@@ -37,7 +38,8 @@
       {/foreach}
     </select>
     <br>
-    <input type="submit" value="Adaugă" />
+    <input type="submit" name="add" value="Adaugă" />
+    <input type="submit" name="delete" value="Șterge definițiile selectate" />
   </form>
 
 {/block}

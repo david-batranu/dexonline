@@ -134,10 +134,13 @@ function searchSubmit() {
   var selected = [].slice.call(source.options).filter(function(opt) { return opt.selected });
   var value = selected.map(function(opt) {return opt.value}).join('-');
 
-  var sourcePart = value ? '-' + value : '';
-  window.location = wwwRoot + action + sourcePart + '/' + encodeURIComponent(cuv);
+  // If source selection includes custom source definitions, submit directly to search.php.
+  if (value.indexOf('userSelection') === -1) {
+    var sourcePart = value ? '-' + value : '';
+    window.location = wwwRoot + action + sourcePart + '/' + encodeURIComponent(cuv);
 
-  return false;
+    return false;
+  }
 }
 
 function searchInitAutocomplete(acMinChars){

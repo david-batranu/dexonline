@@ -3,6 +3,8 @@
 class UserSelection extends BaseObject implements DatedObject {
   public static $_table = 'UserSelection';
 
+  const PREFIX = 'userSelection';
+
   function getSources() {
     return Model::factory('Source')
       ->select('Source.*')
@@ -13,9 +15,11 @@ class UserSelection extends BaseObject implements DatedObject {
   }
 
   static function getSelections($userId) {
-    return Model::factory('UserSelection')
-      ->where('userId', $userId)
-      ->order_by_asc('name')
-      ->find_many();
+    return $userId
+      ? Model::factory('UserSelection')
+          ->where('userId', $userId)
+          ->order_by_asc('name')
+          ->find_many()
+      : [];
   }
 };

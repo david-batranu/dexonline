@@ -44,12 +44,37 @@ $SEARCH_PARAMS = [
   SEARCH_FULL_TEXT => $DEFAULT_SEARCH_PARAMS,
 ];
 
+
+function getPrefixedValue($value) {
+  return (int)explode(UserSelection::PREFIX . ':', $value)[1];
+}
+
+function isUserSelection($value) {
+  return strpos($value, UserSelection::PREFIX) !== false;
+}
+
+function getUserSelectionSources($us) {
+  return Util::objectProperty($us->getSources(), 'urlName');
+}
+
 $cuv = Request::getWithApostrophes('cuv');
 $entryId = Request::get('entryId');
 $lexemeId = Request::get('lexemeId');
 $defId = Request::get('defId');
-$_sourceUrlNames = Request::getArray('source');
-$sourceUrlNames = is_array($_sourceUrlNames) ? $_sourceUrlNames : explode('-', $_sourceUrlNames);
+$_source = Request::getArray('source');
+$_sourceUrlNames = is_array($_source) ? $_source : explode('-', $_source);
+
+$userSelections = array_filter($_sourceUrlNames, 'isUserSelection');
+$userSelectionValues = array_map('getPrefixedValue', $userSelections);
+$userSelectionObjects = Model::factory('UserSelection')
+  ->where_in('id', $userSelectionValues)
+  ->find_many();
+$_userSelectionSources = array_map('getUserSelectionSources', $userSelectionObjects);
+$userSelectionSources = array_reduce($_userSelectionSources, function($acc, $sourceUrls) { return array_merge($acc, $sourceUrls);}, []);
+
+// TODO: Not good! $sourceUrlNames should not include the expanded $userSelections, those should only be used for the queries!
+$sourceUrlNames = array_merge($_sourceUrlNames, $userSelectionSources);
+
 $text = Request::has('text');
 $showParadigm = Request::get('showParadigm');
 $format = checkFormat();
@@ -64,8 +89,14 @@ if ($cuv && !$redirect) {
   $cuv = Str::cleanupQuery($cuv);
 }
 
-Request::redirectToFriendlyUrl($cuv, $entryId, $lexemeId, $sourceUrlNames, $text, $showParadigm,
-                               $format, $all);
+// Redirect to pretty url only if source selection does not include custom source definitions.
+if (strpos(implode('', $sourceUrlNames), UserSelection::PREFIX) === false) {
+  Request::redirectToFriendlyUrl($cuv, $entryId, $lexemeId, $sourceUrlNames, $text, $showParadigm,
+    $format, $all);
+} else {
+  SmartyWrap::assign('userSelectionValues', $userSelectionValues);
+}
+
 
 $paradigmLink = $_SERVER['REQUEST_URI'] . ($showParadigm ? '' : '/paradigma');
 

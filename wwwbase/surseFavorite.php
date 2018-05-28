@@ -8,11 +8,15 @@ if (!$user) {
   Util::redirect(Core::getWwwRoot());
 }
 
+$actionAdd = Request::get('add');
+$actionDelete = Request::get('delete');
+
+$toDelete = Request::getArray('toDelete');
 
 $addNewName = Request::get('selectionName');
 $addNewIds = Request::getArray('sourceId');
 
-if ($addNewName && $addNewIds) {
+if ($actionAdd && $addNewName && $addNewIds) {
   $us = Model::factory('UserSelection')
     ->create();
   $us->userId = $user->id;
@@ -27,6 +31,18 @@ if ($addNewName && $addNewIds) {
     $ss->save();
   }
 
+}
+
+if ($actionDelete && $toDelete) {
+  // delete SelectionSources
+  Model::factory('SelectionSource')
+    ->where_in('selectionId', $toDelete)
+    ->delete_many();
+
+  // delete UserSelections
+  Model::factory('UserSelection')
+    ->where_in('id', $toDelete)
+    ->delete_many();
 }
 
 

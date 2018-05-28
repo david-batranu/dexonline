@@ -1,4 +1,5 @@
 {assign var="advancedSearch" value=$advancedSearch|default:false}
+{assign var="userSelections" value=UserSelection::getSelections(User::getActiveId())}
 {assign var="cuv" value=$cuv|default:''}
 {assign var="text" value=$text|default:false}
 
@@ -39,7 +40,7 @@
       <div class="row" id="advSearch" {if !$advancedSearch}style="display: none"{/if}>
 
         <div class="col-md-6">
-          {include "bits/sourceDropDown.tpl" urlName=1 multiple=true}
+          {include "bits/sourceDropDown.tpl" urlName=1 multiple=true userSelections=$userSelections}
         </div>
 
         <div class="checkbox col-md-6">

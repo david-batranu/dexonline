@@ -6,6 +6,8 @@
 {assign var="urlName" value=$urlName|default:false}
 {assign var="width" value=$width|default:'100%'}
 {assign var="autosubmit" value=$autosubmit|default:false}
+{assign var="userSelections" value=$userSelections|default:[]}
+{assign var="userSelectionValues" value=$userSelectionValues|default:[]}
 <select name="{$name}[]"
         id="sourceDropDown"
         class="form-control sourceDropDown"
@@ -14,6 +16,16 @@
         {if $autosubmit}onchange="this.form.submit();"{/if}>
   {if !$skipAnySource}
     <option value="">Toate dicționarele</option>
+  {/if}
+  {if $userSelections}
+    <optgroup label="Surse favorite">
+      {foreach $userSelections as $us}
+        <option
+          value="{UserSelection::PREFIX}:{$us->id}"
+          {if in_array($us->id, $userSelectionValues)}selected="selected"{/if}
+          >{$us->name}</option>
+      {/foreach}
+    </optgroup>
   {/if}
   {foreach Source::getAll(Source::SORT_SEARCH) as $source}
     {if $urlName}
