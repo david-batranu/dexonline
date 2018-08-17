@@ -9,11 +9,12 @@ class FullTextIndex extends BaseObject {
     }
     $lexemeString = implode(',', $lexemeIds);
     if ($sourceIds) {
+      $sourceIdsString = implode(',', $sourceIds);
       $query = "select distinct definitionId " .
         "from FullTextIndex F " .
         "join Definition D on D.id = F.definitionId " .
         "where lexemeId in ($lexemeString) " .
-        "and D.sourceId in ($sourceIds) " .
+        "and D.sourceId in ($sourceIdsString) " .
         "order by definitionId";
     } else {
       $query = "select distinct definitionId " .

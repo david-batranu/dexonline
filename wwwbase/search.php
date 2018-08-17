@@ -52,10 +52,14 @@ function getPrefixedValue($value) {
 function isUserSelection($value) {
   return strpos($value, UserSelection::PREFIX) !== false;
 }
+function isNotUserSelection($value) {
+  return !isUserSelection($value);
+}
 
 function getUserSelectionSources($us) {
   return Util::objectProperty($us->getSources(), 'urlName');
 }
+
 
 $cuv = Request::getWithApostrophes('cuv');
 $entryId = Request::get('entryId');
@@ -63,17 +67,23 @@ $lexemeId = Request::get('lexemeId');
 $defId = Request::get('defId');
 $_source = Request::getArray('source');
 $_sourceUrlNames = is_array($_source) ? $_source : explode('-', $_source);
+$_sourceUrlNamesNoUserSelection = array_filter($_sourceUrlNames, 'isNotUserSelection');
 
 $userSelections = array_filter($_sourceUrlNames, 'isUserSelection');
-$userSelectionValues = array_map('getPrefixedValue', $userSelections);
-$userSelectionObjects = Model::factory('UserSelection')
-  ->where_in('id', $userSelectionValues)
-  ->find_many();
-$_userSelectionSources = array_map('getUserSelectionSources', $userSelectionObjects);
-$userSelectionSources = array_reduce($_userSelectionSources, function($acc, $sourceUrls) { return array_merge($acc, $sourceUrls);}, []);
+if ($userSelections) {
+  $userSelectionValues = array_map('getPrefixedValue', $userSelections);
 
-// TODO: Not good! $sourceUrlNames should not include the expanded $userSelections, those should only be used for the queries!
-$sourceUrlNames = array_merge($_sourceUrlNames, $userSelectionSources);
+  $userSelectionObjects = Model::factory('UserSelection')
+    ->where_in('id', $userSelectionValues)
+    ->find_many();
+  $_userSelectionSources = array_map('getUserSelectionSources', $userSelectionObjects);
+  $userSelectionSources = array_reduce($_userSelectionSources, function($acc, $sourceUrls) { return array_merge($acc, $sourceUrls);}, []);
+
+  $sourceUrlNames = array_merge($_sourceUrlNames, $userSelectionSources);
+}
+else {
+  $sourceUrlNames = $_sourceUrlNamesNoUserSelection;
+}
 
 $text = Request::has('text');
 $showParadigm = Request::get('showParadigm');
@@ -107,7 +117,13 @@ $isAllDigits = FALSE;
 $all = $all || $showParadigm;
 
 $source = array_map('Source::get_by_urlName', $sourceUrlNames);
-$sourceIds = Util::objectProperty($source, 'id');
+$_sourceIds = Util::objectProperty($source, 'id');
+// filter out empty Source IDs, caused by $sourceUrlNames containing things like userSelection:X
+$sourceIds = array_filter($_sourceIds, function($id) {return $id;});
+
+$sourceNoUserSelection = array_map('Source::get_by_urlName', $_sourceUrlNamesNoUserSelection);
+$sourceIdsNoUserSelection = Util::objectProperty($sourceNoUserSelection, 'id');
+
 
 if ($cuv) {
   SmartyWrap::assign('cuv', $cuv);
@@ -430,7 +446,7 @@ SmartyWrap::assign('extra', $extra);
 SmartyWrap::assign('text', $text);
 SmartyWrap::assign('searchType', $searchType);
 SmartyWrap::assign('searchParams', $SEARCH_PARAMS[$searchType]);
-SmartyWrap::assign('sourceIds', $sourceIds);
+SmartyWrap::assign('sourceIds', $sourceIdsNoUserSelection);
 SmartyWrap::assign('showParadigm', $showParadigm);
 SmartyWrap::assign('locParadigm', Session::userPrefers(Preferences::LOC_PARADIGM));
 SmartyWrap::assign('paradigmLink', $paradigmLink);
